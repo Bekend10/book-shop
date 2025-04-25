@@ -7,6 +7,6 @@ namespace book_shop.Services.Interfaces
         Task<object> RegisterAsync(RegisterDto registerDto);
         Task<object> LoginAsync(LoginDto loginDto);
         Task<object> LockAsync(int id);
-
+        Task<object> RefreshTokenAsync(string refreshToken);
     }
 }
