@@ -31,7 +31,6 @@
     <Folder Include="EmailTemplates\Orders\" />
     <Folder Include="Extensions\" />
     <Folder Include="Constants\" />
-    <Folder Include="Middlewares\" />
     <Folder Include="Validations\" />
     <Folder Include="Queries\" />
     <Folder Include="UnitOfWork\" />
