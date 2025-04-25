@@ -1,6 +1,7 @@
 ﻿using book_shop.Dto;
 using book_shop.Services.Implementations;
 using book_shop.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -71,6 +72,23 @@ namespace book_shop.Controllers
                 return Unauthorized(new { message = ((dynamic)result).message });
             }
 
+            return Ok(result);
+        }
+
+        [HttpPut]
+        [Authorize]
+        [Route("change-password")]
+        public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
+        {
+            var result = await _accountService.ChangePassword(dto);
+            return Ok(result);
+        }
+
+        [HttpPut]
+        [Route("reset-password")]
+        public async Task<IActionResult> ResetPassword(string email)
+        {
+            var result = await _accountService.ForgotPasswordAsync(email);
             return Ok(result);
         }
     }
