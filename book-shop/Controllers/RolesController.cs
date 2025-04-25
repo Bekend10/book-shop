@@ -22,7 +22,7 @@ namespace book_shop.Controllers
         [Route("create-role")]
         public async Task<IActionResult> Create(CreateRoleDto dto)
         {
-            var result = _roleservice.CreateAsync(dto);
+            var result = await _roleservice.CreateAsync(dto);
             return Ok(result);
         }
     }

@@ -1,6 +1,7 @@
-using book_shop.Data;
+﻿using book_shop.Data;
 using book_shop.EmailService;
 using book_shop.Helpers.EmailHelper;
+using book_shop.Middlewares;
 using book_shop.Repositories.Implementations;
 using book_shop.Repositories.Interfaces;
 using book_shop.Services.Implementations;
@@ -12,11 +13,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();
-
-// Add services to the container.
+// Add services to the container
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddControllers();
@@ -32,9 +29,22 @@ builder.Services.AddScoped<EmailTemplateLoader>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+// Add CORS before building the app
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -45,10 +55,32 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnChallenge = context =>
+            {
+                context.HandleResponse(); 
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/json";
+                return context.Response.WriteAsync("{\"message\": \"Chưa đăng nhập hoặc token không hợp lệ.\"}");
+            },
+            OnForbidden = context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.ContentType = "application/json";
+                return context.Response.WriteAsync("{\"message\": \"Bạn không có quyền truy cập tài nguyên này.\"}");
+            }
+        };
     });
+
 
 builder.Services.AddAuthorization();
 var app = builder.Build();
+
+// Use CORS middleware
+app.UseCors("AllowAll");
+
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -58,9 +90,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
+app.UseAuthentication();   
+app.UseAuthorization();   
 app.MapControllers();
 
 app.Run();

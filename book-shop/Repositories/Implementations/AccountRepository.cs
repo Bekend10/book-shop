@@ -14,11 +14,9 @@ namespace book_shop.Repositories.Implementations
             _context = context;
         }
 
-        public async Task<User> GetUserByEmailAsync(string email)
+        public async Task<Account> GetAccountByEmailAsync(string email)
         {
-            return await _context.Users
-                .Include(u => u.Account)
-                .FirstOrDefaultAsync(u => u.email == email);
+            return await _context.Accounts.FirstOrDefaultAsync(u => u.email == email);
         }
 
         public async Task AddUserWithAccountAsync(User user, Account account)
@@ -59,6 +57,10 @@ namespace book_shop.Repositories.Implementations
                 _context.Accounts.Remove(account);
                 await _context.SaveChangesAsync();
             }
+        }
+        public async Task<Account> GetByRefreshTokenAsync(string refreshToken)
+        {
+            return await _context.Accounts.FirstOrDefaultAsync(u => u.refresh_token == refreshToken);
         }
     }
 }
