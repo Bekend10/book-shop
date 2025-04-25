@@ -32,7 +32,7 @@ namespace book_shop.Services.Implementations
         {
             try
             {
-                var existingUser = await _accountRepository.GetUserByEmailAsync(registerDto.email);
+                var existingUser = await _accountRepository.GetAccountByEmailAsync(registerDto.email);
                 if (existingUser != null)
                     throw new Exception("Email đã tồn tại !");
 
@@ -84,8 +84,8 @@ namespace book_shop.Services.Implementations
         {
             try
             {
-                var user = await _accountRepository.GetUserByEmailAsync(loginDto.email);
-                if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.password, user.Account.password))
+                var account = await _accountRepository.GetAccountByEmailAsync(loginDto.email);
+                if (account == null || !BCrypt.Net.BCrypt.Verify(loginDto.password,account.password))
                 {
                     _logger.LogWarning("Đăng nhập thất bại cho email: {Email}", loginDto.email);
                     return new
@@ -94,14 +94,18 @@ namespace book_shop.Services.Implementations
                         msg = "Sai tài khoản hoặc mật khẩu chưa chính xác !"
                     };
                 }
+                var accessToken = _jwtService.GenerateJwtToken(account);
+                var refreshToken = _jwtService.GenerateRefreshToken();
 
-                var token = _jwtService.GenerateJwtToken(user);
-
+                account.refresh_token = refreshToken;
+                account.refresh_token_ext = DateTime.UtcNow.AddDays(7);
+                await _accountRepository.UpdateAsync(account);
                 return new
                 {
                     status = HttpStatusCode.OK,
                     msg = "Đăng nhập thành công !",
-                    access_token = token
+                    access_token = accessToken,
+                    refresh_token = refreshToken
                 };
             }catch (Exception ex)
             {
@@ -142,6 +146,24 @@ namespace book_shop.Services.Implementations
                 status = HttpStatusCode.OK,
                 msg = "Khoá thành công !"
             };
-        }      
+        }
+
+        public async Task<object> RefreshTokenAsync(string refreshToken)
+        {
+            var account = await _accountRepository.GetByRefreshTokenAsync(refreshToken);
+            if (account == null || account.refresh_token_ext < DateTime.UtcNow)
+            {
+                return new { status = 401, message = "Refresh token không hợp lệ hoặc đã hết hạn." };
+            }
+
+            var newAccessToken = _jwtService.GenerateJwtToken(account);
+            var newRefreshToken = _jwtService.GenerateRefreshToken();
+
+            account.refresh_token = newRefreshToken;
+            account.refresh_token_ext = DateTime.UtcNow.AddDays(7);
+            await _accountRepository.UpdateAsync(account);
+
+            return new { accessToken = newAccessToken, refreshToken = newRefreshToken };
+        }
     }
 }

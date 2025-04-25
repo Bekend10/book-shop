@@ -14,18 +14,25 @@ namespace book_shop.Services.Implementations
         {
             _configuration = configuration;
         }
-        public string GenerateJwtToken(User user)
+        public string GenerateJwtToken(Account account)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
+            var roleName = account.role_id switch
+            {
+                1 => "user",
+                2 => "admin",
+                3 => "warehouse",
+                _ => "unknown"
+            };
+
             var claims = new[]
             {
-            new Claim(ClaimTypes.NameIdentifier, user.user_id.ToString()),
-            new Claim(ClaimTypes.Email, user.email),
-            new Claim(ClaimTypes.Name, $"{user.first_name} {user.last_name}"),
-            new Claim(ClaimTypes.Role , user.Account.role_id.ToString())
-        };
+                new Claim(ClaimTypes.NameIdentifier, account.user_id.ToString()),
+                new Claim(ClaimTypes.Email, account.email),
+                new Claim(ClaimTypes.Role, roleName)
+            };
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
