@@ -1,4 +1,5 @@
 ﻿using book_shop.Dto;
+using book_shop.Services.Implementations;
 using book_shop.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -61,5 +62,16 @@ namespace book_shop.Controllers
             });
         }
 
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
+        {
+            var result = await _accountService.RefreshTokenAsync(refreshToken);
+            if (result is not null && result.GetType() == typeof(System.Object) && ((dynamic)result).status == 401)
+            {
+                return Unauthorized(new { message = ((dynamic)result).message });
+            }
+
+            return Ok(result);
+        }
     }
 }
