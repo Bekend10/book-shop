@@ -73,7 +73,8 @@ namespace book_shop.EmailService
         {
             var bodyContent = _templateLoader.LoadTemplate("Account/Welcome.html", new Dictionary<string, string>
             {
-                { "UserName", userName }
+                { "UserName", userName },
+                { "email", toEmail }
             });
 
             var finalBody = _templateLoader.WrapWithLayout(bodyContent);
