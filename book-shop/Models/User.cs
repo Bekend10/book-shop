@@ -15,5 +15,6 @@ namespace book_shop.Models
         public bool gender { get; set; }
         public DateTime dob { get; set; }
         public Account Account { get; set; }
+        public Address Address { get; set; }
     }
 }
