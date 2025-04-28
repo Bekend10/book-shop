@@ -11,5 +11,9 @@ namespace book_shop.Services.Interfaces
         Task<object> ForgotPasswordAsync(string email);
         Task<object> ChangePassword(ChangePasswordDto dto);
         string GenerateRandomPassword(int length = 10);
+        Task<object> GetAllAccounts();
+        Task<object> GetAccountById(int id);
+        Task<object> DeleteAccountAysnc(int id);
+        Task<object> VerifyEmailAsync(string email);
     }
 }

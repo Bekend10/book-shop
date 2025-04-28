@@ -16,17 +16,19 @@ namespace book_shop.Services.Implementations
     public class AccountService : IAccountService
     {
         private readonly IAccountRepository _accountRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IJWTService _jwtService;
         private readonly ILogger<AccountService> _logger;
         private readonly IEmailService _emailService;
 
 
-        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService)
+        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository)
         {
             _accountRepository = accountRepository;
             _jwtService = jwtService;
             _logger = logger;
             _emailService = emailService;
+            _userRepository = userRepository;
         }
 
         public async Task<object> RegisterAsync(RegisterDto registerDto)
@@ -47,7 +49,6 @@ namespace book_shop.Services.Implementations
                     created_at = DateTime.UtcNow,
                 };
                 var full_name = registerDto.first_name + " " + registerDto.last_name;
-                await _emailService.SendWelcomeEmailAsync(registerDto.email, full_name);
 
                 var refresh_token = _jwtService.GenerateRefreshToken();
 
@@ -59,8 +60,9 @@ namespace book_shop.Services.Implementations
                     refresh_token = refresh_token,
                     refresh_token_ext = DateTime.UtcNow,
                     is_active = true,
-                    is_verify = 1,
                 };
+
+                await _emailService.SendWelcomeEmailAsync(registerDto.email, full_name);
 
                 await _accountRepository.AddUserWithAccountAsync(user, account);
                 _logger.LogInformation("Đăng nhập thành công email {email}", account.email);
@@ -184,7 +186,7 @@ namespace book_shop.Services.Implementations
                 }
                 var newPassword = GenerateRandomPassword();
                 await _emailService.SendResetPassword(email, email, newPassword);
-                newPassword =  BCrypt.Net.BCrypt.HashPassword(newPassword);
+                newPassword = BCrypt.Net.BCrypt.HashPassword(newPassword);
 
                 existingAccount.password = newPassword;
                 await _accountRepository.UpdateAsync(existingAccount);
@@ -280,6 +282,111 @@ namespace book_shop.Services.Implementations
             }
 
             return password.ToString();
+        }
+
+        public async Task<object> GetAllAccounts()
+        {
+            var accounts = await _accountRepository.GetAllAsync();
+            return new
+            {
+                status = HttpStatusCode.OK,
+                msg = "Lấy danh sách tài khoản thành công !",
+                accounts
+            };
+        }
+
+        public async Task<object> GetAccountById(int id)
+        {
+            try
+            {
+                var existingAccount = await _accountRepository.GetByIdAsync(id);
+                if (existingAccount == null)
+                {
+                    return new
+                    {
+                        status = HttpStatusCode.NotFound,
+                        msg = "Không tìm thấy tài khoản !"
+                    };
+                }
+                return new
+                {
+                    status = HttpStatusCode.OK,
+                    msg = "Lấy tài khoản thành công !",
+                    account = existingAccount
+                };
+            }
+            catch (Exception ex)
+            {
+                return new
+                {
+                    status = HttpStatusCode.InternalServerError,
+                    msg = "Xảy ra lỗi " + ex.Message
+                };
+            }
+        }
+
+        public async Task<object> DeleteAccountAysnc(int id)
+        {
+            try
+            {
+                var existingAccount = await _accountRepository.GetByIdAsync(id);
+                if (existingAccount == null)
+                {
+                    return new
+                    {
+                        status = HttpStatusCode.NotFound,
+                        msg = "Không tìm thấy tài khoản !"
+                    };
+                }
+                await _accountRepository.DeleteAsync(id);
+                await _userRepository.DeleteAsync(existingAccount.user_id);
+                return new
+                {
+                    status = HttpStatusCode.OK,
+                    msg = "Xoá tài khoản thành công !"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new
+                {
+                    status = HttpStatusCode.InternalServerError,
+                    msg = "Xảy ra lỗi " + ex.Message
+                };
+            }
+        }
+
+        public async Task<object> VerifyEmailAsync(string email)
+        {
+            try
+            {
+                var existingAccount = await _accountRepository.GetAccountByEmailAsync(email);
+                if (existingAccount == null)
+                {
+                    return new
+                    {
+                        status = HttpStatusCode.NotFound,
+                        msg = "Không tìm thấy tài khoản !"
+                    };
+                }
+
+                existingAccount.is_verify = 1;
+                await _accountRepository.UpdateAsync(existingAccount);
+
+                return new
+                {
+                    status = HttpStatusCode.OK,
+                    msg = "Xác thực tài khoản thành công !"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new
+                {
+                    status = HttpStatusCode.InternalServerError,
+                    msg = "Xảy ra lỗi " + ex.Message
+                };
+            }
         }
     }
 }
