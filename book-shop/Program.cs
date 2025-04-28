@@ -29,6 +29,8 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<EmailTemplateLoader>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
 // Add CORS before building the app
 builder.Services.AddCors(options =>
