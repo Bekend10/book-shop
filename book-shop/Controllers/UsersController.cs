@@ -8,7 +8,7 @@ using System.Net;
 namespace book_shop.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v1/users")]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -20,6 +20,7 @@ namespace book_shop.Controllers
 
         [Authorize(Roles = "admin")]
         [HttpGet]
+        [Route("get-users")]
         public async Task<IActionResult> GetAll()
         {
             var users = await _userService.GetAllAsync();
@@ -37,6 +38,7 @@ namespace book_shop.Controllers
 
         [Authorize(Roles = "admin")]
         [HttpPost]
+        [Route("create")]
         public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
         {
             var result = await _userService.CreateAsync(dto);
@@ -56,6 +58,15 @@ namespace book_shop.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _userService.DeleteAsync(id);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Authorize]
+        [Route("get-my-infor")]
+        public async Task<IActionResult> GetMyInformation()
+        {
+            var result = await _userService.GetMyInformation();
             return Ok(result);
         }
     }

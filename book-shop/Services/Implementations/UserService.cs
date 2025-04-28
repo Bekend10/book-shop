@@ -30,7 +30,6 @@ namespace book_shop.Services.Implementations
                 dob = dto.dob,
                 gender = dto.gender,
                 profile_image = dto.profile_image,
-                address_id = dto.address_id,
                 created_at = DateTime.UtcNow
             };
 
@@ -76,12 +75,6 @@ namespace book_shop.Services.Implementations
                 isUpdated = true;
             }
 
-            if (dto.address_id.HasValue && dto.address_id != user.address_id)
-            {
-                user.address_id = (int)dto.address_id;
-                isUpdated = true;
-            }
-
             if (!isUpdated)
             {
                 return new { status = HttpStatusCode.NotModified, msg = "Không có thay đổi nào được thực hiện." };
@@ -100,6 +93,27 @@ namespace book_shop.Services.Implementations
 
             await _userRepository.DeleteAsync(id);
             return new { status = HttpStatusCode.OK, msg = "Xoá người dùng thành công!" };
+        }
+        
+        public async Task<object> GetMyInformation()
+        {
+            var userId = await _userRepository.GetCurrentUserIdAsync();
+            if(userId < 0)
+            {
+                return new
+                {
+                    status = HttpStatusCode.NotFound,
+                    msg = "Không tìm thấy người dùng"
+                };
+            }
+
+            var infor = await _userRepository.GetByIdAsync(userId);
+            return new
+            {
+                status = HttpStatusCode.OK,
+                msg = "Lấy thông tin người dùng thành công !",
+                infor
+            };
         }
     }
 

@@ -2,15 +2,19 @@
 using book_shop.Models;
 using book_shop.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace book_shop.Repositories.Implementations
 {
     public class UserRepository : IUserRepository
     {
         private readonly ApplicationDbContext _context;
-        public UserRepository(ApplicationDbContext context)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public UserRepository(ApplicationDbContext context , IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task AddAsync(User entity)
@@ -38,6 +42,19 @@ namespace book_shop.Repositories.Implementations
         public async Task<User> GetByIdAsync(int id)
         {
             return await _context.Users.FindAsync(id);
+        }
+
+        public async Task<int> GetCurrentUserIdAsync()
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+            if (user == null || !user.Identity.IsAuthenticated)
+                return -1;
+
+            var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                return -1;
+
+            return userId;
         }
 
         public Task<User?> GetUserByEmailAsync(string email)

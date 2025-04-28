@@ -55,11 +55,26 @@ namespace book_shop.EmailService
                 throw new Exception("Lỗi khi gửi email: " + ex.Message);
             }
         }
+
+        public async Task<bool> SendResetPassword(string toEmail, string userName , string newPassword)
+        {
+            var bodyContent = _templateLoader.LoadTemplate("Account/ResetPassword.html", new Dictionary<string, string>
+            {
+                { "UserName", userName },
+                { "newPassword", newPassword },
+            });
+
+            var finalBody = _templateLoader.WrapWithLayout(bodyContent);
+
+            return await SendEmailAsync(toEmail, userName, "Khôi phục mật khẩu", finalBody);
+        }
+
         public async Task<bool> SendWelcomeEmailAsync(string toEmail, string userName)
         {
             var bodyContent = _templateLoader.LoadTemplate("Account/Welcome.html", new Dictionary<string, string>
             {
-                { "UserName", userName }
+                { "UserName", userName },
+                { "email", toEmail }
             });
 
             var finalBody = _templateLoader.WrapWithLayout(bodyContent);
