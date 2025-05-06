@@ -18,7 +18,7 @@ namespace book_shop.Controllers
         }
 
         [HttpGet]
-        [Authorize("admin")]
+        [Authorize(Roles = "admin")]
         [Route("get-addresses")]
         public async Task<IActionResult> GetAllAddresses()
         {
