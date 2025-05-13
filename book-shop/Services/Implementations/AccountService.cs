@@ -1,6 +1,7 @@
 ﻿using book_shop.Dto;
 using book_shop.EmailService;
 using book_shop.Models;
+using book_shop.Repositories.Implementations;
 using book_shop.Repositories.Interfaces;
 using book_shop.Services.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -16,19 +17,21 @@ namespace book_shop.Services.Implementations
     public class AccountService : IAccountService
     {
         private readonly IAccountRepository _accountRepository;
+        private readonly IAddressRepository _addressRepository;
         private readonly IUserRepository _userRepository;
         private readonly IJWTService _jwtService;
         private readonly ILogger<AccountService> _logger;
         private readonly IEmailService _emailService;
 
 
-        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository)
+        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository, IAddressRepository addressRepository)
         {
             _accountRepository = accountRepository;
             _jwtService = jwtService;
             _logger = logger;
             _emailService = emailService;
             _userRepository = userRepository;
+            _addressRepository = addressRepository;
         }
 
         public async Task<object> RegisterAsync(RegisterDto registerDto)
@@ -41,17 +44,29 @@ namespace book_shop.Services.Implementations
 
                 var passwordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.password);
 
+                var address = new Address
+                {
+                    country = "",
+                    councious = "",
+                    district = "",
+                    commune = "",
+                    house_number = ""
+                };
+
+                await _addressRepository.AddAsync(address);
+
                 var user = new User
                 {
                     first_name = registerDto.first_name,
                     last_name = registerDto.last_name,
                     email = registerDto.email,
                     created_at = DateTime.UtcNow,
+                    address_id = address.address_id,
                 };
                 var full_name = registerDto.first_name + " " + registerDto.last_name;
 
                 var refresh_token = _jwtService.GenerateRefreshToken();
-
+             
                 var account = new Account
                 {
                     email = registerDto.email,
