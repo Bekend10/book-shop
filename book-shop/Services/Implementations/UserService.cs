@@ -56,6 +56,31 @@ namespace book_shop.Services.Implementations
                 user.last_name = dto.last_name;
                 isUpdated = true;
             }
+            if (!string.IsNullOrWhiteSpace(dto.country) && dto.country != user.Address.country)
+            {
+                user.Address.country = dto.country;
+                isUpdated = true;
+            }
+            if (!string.IsNullOrWhiteSpace(dto.councious) && dto.councious != user.Address.councious)
+            {
+                user.Address.councious = dto.councious;
+                isUpdated = true;
+            }
+            if (!string.IsNullOrWhiteSpace(dto.commune) && dto.commune != user.Address.commune)
+            {
+                user.Address.commune = dto.commune;
+                isUpdated = true;
+            }
+            if (!string.IsNullOrWhiteSpace(dto.district) && dto.district != user.Address.district)
+            {
+                user.Address.district = dto.district;
+                isUpdated = true;
+            }
+            if (!string.IsNullOrWhiteSpace(dto.house_number) && dto.house_number != user.Address.house_number)
+            {
+                user.Address.house_number = dto.house_number;
+                isUpdated = true;
+            }
 
             if (dto.dob.HasValue && dto.dob.Value.Date != user.dob.Date)
             {
@@ -94,11 +119,11 @@ namespace book_shop.Services.Implementations
             await _userRepository.DeleteAsync(id);
             return new { status = HttpStatusCode.OK, msg = "Xoá người dùng thành công!" };
         }
-        
+
         public async Task<object> GetMyInformation()
         {
             var userId = await _userRepository.GetCurrentUserIdAsync();
-            if(userId < 0)
+            if (userId < 0)
             {
                 return new
                 {
