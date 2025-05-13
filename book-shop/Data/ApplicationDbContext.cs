@@ -13,6 +13,8 @@ namespace book_shop.Data
         public DbSet<Account> Accounts { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Address> Address { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<Book> Books { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
@@ -30,6 +32,12 @@ namespace book_shop.Data
                 .WithMany(r => r.account)
                 .HasForeignKey(a => a.role_id)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Category>()
+                .HasMany(c => c.book)
+                .WithOne(b => b.category)
+                .HasForeignKey(b => b.category_id)
+                .OnDelete(DeleteBehavior.Cascade);
 
             base.OnModelCreating(modelBuilder);
         }

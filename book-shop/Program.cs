@@ -1,6 +1,7 @@
 ﻿using book_shop.Data;
 using book_shop.EmailService;
 using book_shop.Helpers.EmailHelper;
+using book_shop.Helpers.UserHelper;
 using book_shop.Middlewares;
 using book_shop.Repositories.Implementations;
 using book_shop.Repositories.Interfaces;
@@ -27,12 +28,15 @@ builder.Services.AddScoped<IJWTService, JWTService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<EmailTemplateLoader>();
+builder.Services.AddScoped<UserHelper>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<IAddressService, AddressService>();
+builder.Services.AddScoped<ICategoryRepository, CategoryReponsitory>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 // Add CORS before building the app
 builder.Services.AddCors(options =>
