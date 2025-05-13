@@ -1,0 +1,20 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace book_shop.Models
+{
+    public class Book
+    {
+        [Key]
+        public int book_id { get; set; }
+        public string title { get; set; } = string.Empty;
+        public string author { get; set; } = string.Empty;
+        public DateTime publisher_year { get; set; }
+        public string publisher { get; set; } = string.Empty;
+        public int is_bn { get; set; }
+        public int quantity { get; set; }
+        public DateTime created_at { get; set; }
+        public int category_id { get; set; }
+        public Category category { get; set; } 
+
+    }
+}
