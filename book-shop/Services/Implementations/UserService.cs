@@ -30,7 +30,7 @@ namespace book_shop.Services.Implementations
                 dob = dto.dob,
                 gender = dto.gender,
                 profile_image = dto.profile_image,
-                created_at = DateTime.UtcNow
+                created_at = DateTime.Now
             };
 
             await _userRepository.AddAsync(user);

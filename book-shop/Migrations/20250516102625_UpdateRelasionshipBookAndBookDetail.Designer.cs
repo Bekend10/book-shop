@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using book_shop.Data;
 
@@ -11,9 +12,11 @@ using book_shop.Data;
 namespace book_shop.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250516102625_UpdateRelasionshipBookAndBookDetail")]
+    partial class UpdateRelasionshipBookAndBookDetail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -114,6 +117,9 @@ namespace book_shop.Migrations
                     b.Property<DateTime>("created_at")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("detail_id")
+                        .HasColumnType("int");
+
                     b.Property<string>("image_url")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -171,9 +177,6 @@ namespace book_shop.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("is_bn")
-                        .HasColumnType("int");
-
                     b.Property<string>("language")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -182,16 +185,6 @@ namespace book_shop.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("price")
-                        .HasColumnType("int");
-
-                    b.Property<string>("publisher")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("publisher_year")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("quantity")
                         .HasColumnType("int");
 
                     b.HasKey("detail_id");

@@ -40,7 +40,7 @@ namespace book_shop.Controllers
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddHours(1)
+                    Expires = DateTime.Now.AddHours(1)
                 });
 
                 return Ok(result);

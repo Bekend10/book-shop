@@ -36,4 +36,8 @@
     <Folder Include="UnitOfWork\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\cloudinary-service\cloudinary-service.csproj" />
+  </ItemGroup>
+
 </Project>
