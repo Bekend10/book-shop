@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using book_shop.Data;
 
@@ -11,9 +12,11 @@ using book_shop.Data;
 namespace book_shop.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250516100237_UpdateTableBookDetailForID")]
+    partial class UpdateTableBookDetailForID
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -114,6 +117,9 @@ namespace book_shop.Migrations
                     b.Property<DateTime>("created_at")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("detail_id")
+                        .HasColumnType("int");
+
                     b.Property<string>("image_url")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -151,8 +157,6 @@ namespace book_shop.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("detail_id"));
-
                     b.Property<int>("book_id")
                         .HasColumnType("int");
 
@@ -171,9 +175,6 @@ namespace book_shop.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("is_bn")
-                        .HasColumnType("int");
-
                     b.Property<string>("language")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -184,20 +185,7 @@ namespace book_shop.Migrations
                     b.Property<int>("price")
                         .HasColumnType("int");
 
-                    b.Property<string>("publisher")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("publisher_year")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("quantity")
-                        .HasColumnType("int");
-
                     b.HasKey("detail_id");
-
-                    b.HasIndex("book_id")
-                        .IsUnique();
 
                     b.ToTable("BookDetails");
                 });
@@ -332,7 +320,7 @@ namespace book_shop.Migrations
                 {
                     b.HasOne("book_shop.Models.Book", "book")
                         .WithOne("bookDetail")
-                        .HasForeignKey("book_shop.Models.BookDetail", "book_id")
+                        .HasForeignKey("book_shop.Models.BookDetail", "detail_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
