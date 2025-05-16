@@ -7,7 +7,7 @@ namespace book_shop.Data
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
-            
+
         }
         public DbSet<User> Users { get; set; }
         public DbSet<Account> Accounts { get; set; }
@@ -15,6 +15,7 @@ namespace book_shop.Data
         public DbSet<Address> Address { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Book> Books { get; set; }
+        public DbSet<BookDetail> BookDetails { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
@@ -38,6 +39,20 @@ namespace book_shop.Data
                 .WithOne(b => b.category)
                 .HasForeignKey(b => b.category_id)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Book>()
+                .HasOne(b => b.bookDetail)
+                .WithOne(d => d.book)
+                .HasForeignKey<BookDetail>(d => d.book_id);
+
+            modelBuilder.Entity<BookDetail>()
+                .HasKey(bd => bd.detail_id);
+
+            modelBuilder.Entity<BookDetail>()
+                .Property(bd => bd.detail_id)
+                .ValueGeneratedOnAdd();
+
+
 
             base.OnModelCreating(modelBuilder);
         }

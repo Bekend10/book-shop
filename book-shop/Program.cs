@@ -7,6 +7,8 @@ using book_shop.Repositories.Implementations;
 using book_shop.Repositories.Interfaces;
 using book_shop.Services.Implementations;
 using book_shop.Services.Interfaces;
+using cloudinary_service.Models;
+using cloudinary_service.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -37,6 +39,15 @@ builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryReponsitory>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IBookDetailRepository, BookDetailRepository>();
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddHttpClient("CloudinaryService", client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7080");
+});
+builder.Services.AddScoped<ICloudService, CloudService>();
 
 // Add CORS before building the app
 builder.Services.AddCors(options =>
