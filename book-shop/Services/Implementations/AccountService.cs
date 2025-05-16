@@ -60,7 +60,7 @@ namespace book_shop.Services.Implementations
                     first_name = registerDto.first_name,
                     last_name = registerDto.last_name,
                     email = registerDto.email,
-                    created_at = DateTime.UtcNow,
+                    created_at = DateTime.Now,
                     address_id = address.address_id,
                 };
                 var full_name = registerDto.first_name + " " + registerDto.last_name;
@@ -73,7 +73,7 @@ namespace book_shop.Services.Implementations
                     role_id = 1,
                     password = passwordHash,
                     refresh_token = refresh_token,
-                    refresh_token_ext = DateTime.UtcNow,
+                    refresh_token_ext = DateTime.Now,
                     is_active = true,
                 };
 
@@ -116,7 +116,7 @@ namespace book_shop.Services.Implementations
                 var refreshToken = _jwtService.GenerateRefreshToken();
 
                 account.refresh_token = refreshToken;
-                account.refresh_token_ext = DateTime.UtcNow.AddDays(7);
+                account.refresh_token_ext = DateTime.Now.AddDays(7);
                 await _accountRepository.UpdateAsync(account);
                 return new
                 {
@@ -171,7 +171,7 @@ namespace book_shop.Services.Implementations
         public async Task<object> RefreshTokenAsync(string refreshToken)
         {
             var account = await _accountRepository.GetByRefreshTokenAsync(refreshToken);
-            if (account == null || account.refresh_token_ext < DateTime.UtcNow)
+            if (account == null || account.refresh_token_ext < DateTime.Now)
             {
                 return new { status = 401, message = "Refresh token không hợp lệ hoặc đã hết hạn." };
             }
@@ -180,7 +180,7 @@ namespace book_shop.Services.Implementations
             var newRefreshToken = _jwtService.GenerateRefreshToken();
 
             account.refresh_token = newRefreshToken;
-            account.refresh_token_ext = DateTime.UtcNow.AddDays(7);
+            account.refresh_token_ext = DateTime.Now.AddDays(7);
             await _accountRepository.UpdateAsync(account);
 
             return new { accessToken = newAccessToken, refreshToken = newRefreshToken };

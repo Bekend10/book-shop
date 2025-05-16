@@ -40,7 +40,7 @@ namespace book_shop.Services.Implementations
                 {
                     name = category.name,
                     description = category.description,
-                    created_at = DateTime.UtcNow,
+                    created_at = DateTime.Now,
                     created_by = userID,
                 };
                 await _categoryRepository.AddAsync(newCategory);
