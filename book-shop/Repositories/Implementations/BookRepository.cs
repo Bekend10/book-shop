@@ -33,13 +33,12 @@ namespace book_shop.Repositories.Implementations
             return await _context.Books.ToListAsync(); 
         }
 
-        public Task<IEnumerable<Book>> GetBooksByAuthorIdAsync(int authorId)
+        public async Task<IEnumerable<Book>> GetBooksByAuthorIdAsync(int authorId)
         {
-            //var books = _context.Books
-            //    .Include(b => b.Authors)
-            //    .Where(b => b.Authors.Any(a => a.AuthorId == authorId))
-            //    .ToListAsync();
-            throw new NotImplementedException();
+            var books = await _context.Books
+                .Where(c => c.author_id == authorId)
+                .ToListAsync();
+            return books;
         }
 
         public async Task<IEnumerable<Book>> GetBooksByCategoryIdAsync(int categoryId)
