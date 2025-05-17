@@ -109,5 +109,16 @@ namespace book_shop.Controllers
             }
             return Ok(books);
         }
+
+        [HttpGet("get-books-by-author")]
+        public async Task<IActionResult> GetBooksByAuthorId(int authorId)
+        {
+            var books = await _bookService.GetBooksByAuthorIdAsync(authorId);
+            if (books == null)
+            {
+                return NotFound();
+            }
+            return Ok(books);
+        }
     }
 }

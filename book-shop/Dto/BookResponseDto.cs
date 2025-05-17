@@ -20,6 +20,7 @@ namespace book_shop.Dto
         public int number_of_page { get; set; }
         public int price { get; set; }
         public BookDetail BookDetail { get; set; } = null!;
+        public Author author { get; set; } = null!;
     }
 
 

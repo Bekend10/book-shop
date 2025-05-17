@@ -6,33 +6,52 @@ using book_shop.Services.Interfaces;
 using cloudinary_service.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace book_shop.Services.Implementations
 {
     public class BookService : IBookService
     {
         private readonly IBookRepository _bookRepository;
+        private readonly ICategoryRepository _categoryRepository;
+        private readonly IAuthorRepository _authorRepository;
         private readonly IBookDetailRepository _bookDetailRepository;
         private readonly ILogger<BookService> _logger;
         private readonly ICloudService _cloudService;
-        public BookService(IBookRepository bookService, ILogger<BookService> logger, ICloudService cloudService, IBookDetailRepository bookDetailRepository)
+        public BookService(IBookRepository bookService, ILogger<BookService> logger, ICloudService cloudService, IBookDetailRepository bookDetailRepository , IAuthorRepository authorRepository , ICategoryRepository categoryRepository)
         {
             _bookRepository = bookService;
             _logger = logger;
             _cloudService = cloudService;
             _bookDetailRepository = bookDetailRepository;
+            _authorRepository = authorRepository;
+            _categoryRepository = categoryRepository;
         }
 
         public async Task<object> AddBook([FromForm] AddBookDto book)
         {
             try
             {
+                var existingCategory = await _categoryRepository.GetByIdAsync(book.category_id);
+                if (existingCategory == null)
+                {
+                    _logger.LogError("Không tìm thấy thể loại có id {categoryId} !", book.category_id);
+                    return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy thể loại !" };
+                }
+
+                var existingAuthor = await _authorRepository.GetByIdAsync(book.author_id);
+                if (existingAuthor == null)
+                {
+                    _logger.LogError("Không tìm thấy tác giả có id {authorId} !", book.author_id);
+                    return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy tác giả !" };
+                }
+
                 var newBook = new Book
                 {
                     title = book.title,
                     author_id = book.author_id,
                     category_id = book.category_id,
-                    publisher = book.publisher,
+                    publisher = book.publisher,             
                     publisher_year = book.publisher_year,
                     price = book.price,
                     quantity = book.quantity,
@@ -114,21 +133,33 @@ namespace book_shop.Services.Implementations
             {
                 _logger.LogInformation("Lấy danh sách sách thành công !");
                 var books = await _bookRepository.GetAllAsync();
-                var bookDtos = books.Select(b => new BookResponseDto
-                {
-                    book_id = b.book_id,
-                    title = b.title,
-                    author_id = b.author_id,
-                    publisher = b.publisher,
-                    price = b.price,
-                    category_id = b.category_id,
-                    image_url = b.image_url,
-                    publisher_year = b.publisher_year,
-                    is_bn = b.is_bn,
-                    quantity = b.quantity,
-                    create_at = b.created_at,
 
-                }).ToList();
+                var bookDtos = await Task.WhenAll(books.Select(async b =>
+                {
+                    var author = await _authorRepository.GetByIdAsync(b.author_id);
+                    return new BookResponseDto
+                    {
+                        book_id = b.book_id,
+                        title = b.title,
+                        author = new Author
+                        {
+                            author_id = author.author_id,
+                            name = author.name,
+                            bio = author.bio,
+                            dob = author.dob,
+                            nationally = author.nationally,
+                        },
+                        publisher = b.publisher,
+                        price = b.price,
+                        category_id = b.category_id,
+                        image_url = b.image_url,
+                        publisher_year = b.publisher_year,
+                        is_bn = b.is_bn,
+                        quantity = b.quantity,
+                        create_at = b.created_at,
+                    };
+                }));
+
                 return new
                 {
                     status = HttpStatusCode.OK,
@@ -158,24 +189,34 @@ namespace book_shop.Services.Implementations
                     return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy sách !" };
                 }
                 var bookDetail = await _bookDetailRepository.GetBookDetailsByBookIdAsync(id);
+                var author = await _authorRepository.GetByIdAsync(book.author_id);
+
                 var bookDto = new BookResponseDto
                 {
                     book_id = book.book_id,
                     title = book.title,
-                    author_id = book.author_id,
+                    author = new Author
+                    {
+                        author_id = author.author_id,
+                        name = author.name,
+                        bio = author.bio,
+                        dob = author.dob,
+                        nationally = author.nationally,
+                    },
                     publisher = book.publisher,
                     price = book.price,
                     category_id = book.category_id,
                     image_url = book.image_url,
+                    publisher_year = book.publisher_year,
                     is_bn = book.is_bn,
                     quantity = book.quantity,
-                    create_at = bookDetail.create_at,
-                    description = bookDetail.description,
+                    create_at = book.created_at,
                     language = bookDetail.language,
                     number_of_page = bookDetail.number_of_page,
                     file_demo_url = bookDetail.file_demo_url,
-                    publisher_year = bookDetail.publisher_year,                   
+                    description = bookDetail.description,
                 };
+
                 _logger.LogInformation("Lấy sách {id} thành công !", id);
                 return new
                 {
@@ -195,35 +236,121 @@ namespace book_shop.Services.Implementations
             }
         }
 
-        public Task<object> GetBooksByAuthorIdAsync(int authorId)
+        public async Task<object> GetBooksByAuthorIdAsync(int authorId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var authors = await _authorRepository.GetByIdAsync(authorId);
+                if(authors == null)
+                {
+                    _logger.LogError("Không tìm thấy tác giả có id {authorId} !", authorId);
+                    return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy tác giả !" };
+                }
+                var book = await _bookRepository.GetBooksByAuthorIdAsync(authorId);
+                if (book == null)
+                {
+                    _logger.LogError("Không tìm thấy sách theo tác giả có id {authorId} !", authorId);
+                    return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy sách theo tác giả !" };
+                }
+                var bookDtos = await Task.WhenAll(book.Select(async b =>
+                {
+                    var author = await _authorRepository.GetByIdAsync(b.author_id);
+                    var bookDetail = await _bookDetailRepository.GetBookDetailsByBookIdAsync(b.book_id);
+                    return new BookResponseDto
+                    {
+                        book_id = b.book_id,
+                        title = b.title,
+                        author = new Author
+                        {
+                            author_id = author.author_id,
+                            name = author.name,
+                            bio = author.bio,
+                            dob = author.dob,
+                            nationally = author.nationally,
+                        },
+                        publisher = b.publisher,
+                        price = b.price,
+                        category_id = b.category_id,
+                        image_url = b.image_url,
+                        publisher_year = b.publisher_year,
+                        is_bn = b.is_bn,
+                        quantity = b.quantity,
+                        create_at = b.created_at,
+                        language = bookDetail.language,
+                        number_of_page = bookDetail.number_of_page,
+                        file_demo_url = bookDetail.file_demo_url,
+                        description = bookDetail.description,
+                    };
+                }));
+
+                _logger.LogInformation("Lấy sách theo tác giả {authorId} thành công !", authorId);
+                return new
+                {
+                    status = HttpStatusCode.OK,
+                    msg = "Lấy danh sách sách theo tác giả thành công !",
+                    data = bookDtos,
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy sách theo tác giả !");
+                return new
+                {
+                    status = HttpStatusCode.InternalServerError,
+                    msg = "Xảy ra lỗi " + ex.Message,
+                };
+            }
         }
 
         public async Task<object> GetBooksByCategoryIdAsync(int categoryId)
         {
             try
             {
+                var category = await _categoryRepository.GetByIdAsync(categoryId);
+                if (category == null)
+                {
+                    _logger.LogError("Không tìm thấy thể loại có id {categoryId} !", categoryId);
+                    return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy thể loại !" };
+                }
+
                 var books = await _bookRepository.GetBooksByCategoryIdAsync(categoryId);
                 if (books == null || !books.Any())
                 {
                     _logger.LogError("Không tìm thấy sách theo thể loại có id {categoryId} !", categoryId);
                     return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy sách theo thể loại !" };
                 }
-                var bookDtos = books.Select(b => new BookResponseDto
+
+                var bookDtos = await Task.WhenAll(books.Select(async b =>
                 {
-                    book_id = b.book_id,
-                    title = b.title,
-                    author_id = b.author_id,
-                    publisher = b.publisher,
-                    price = b.price,
-                    category_id = b.category_id,
-                    image_url = b.image_url,
-                    publisher_year = b.publisher_year,
-                    is_bn = b.is_bn,
-                    quantity = b.quantity,
-                    create_at = b.created_at,
-                }).ToList();
+                    var author = await _authorRepository.GetByIdAsync(b.author_id);
+                    var bookDetail = await _bookDetailRepository.GetBookDetailsByBookIdAsync(b.author_id);
+                    return new BookResponseDto
+                    {
+                        book_id = b.book_id,
+                        title = b.title,
+                        author = new Author
+                        {
+                            author_id = author.author_id,
+                            name = author.name,
+                            bio = author.bio,
+                            dob = author.dob,
+                            nationally = author.nationally,
+                        },
+                        publisher = b.publisher,
+                        price = b.price,
+                        category_id = b.category_id,
+                        image_url = b.image_url,
+                        publisher_year = b.publisher_year,
+                        is_bn = b.is_bn,
+                        quantity = b.quantity,
+                        create_at = b.created_at,
+                        language = bookDetail.language,
+                        number_of_page = bookDetail.number_of_page,
+                        file_demo_url = bookDetail.file_demo_url,
+                        description = bookDetail.description,
+                    };
+                }));
+
                 return new
                 {
                     status = HttpStatusCode.OK,
@@ -252,20 +379,38 @@ namespace book_shop.Services.Implementations
                     _logger.LogError("Không tìm thấy sách theo nhà xuất bản {publisher} !", publisher);
                     return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy sách theo nhà xuất bản !" };
                 }
-                var bookDtos = books.Select(b => new BookResponseDto
+
+                var bookDtos = await Task.WhenAll(books.Select(async b =>
                 {
-                    book_id = b.book_id,
-                    title = b.title,
-                    author_id = b.author_id,
-                    publisher = b.publisher,
-                    price = b.price,
-                    category_id = b.category_id,
-                    image_url = b.image_url,
-                    publisher_year = b.publisher_year,
-                    is_bn = b.is_bn,
-                    quantity = b.quantity,
-                    create_at = b.created_at,
-                }).ToList();
+                    var author = await _authorRepository.GetByIdAsync(b.author_id);
+                    var bookDetail = await _bookDetailRepository.GetBookDetailsByBookIdAsync(b.book_id);
+                    return new BookResponseDto
+                    {
+                        book_id = b.book_id,
+                        title = b.title,
+                        author = new Author
+                        {
+                            author_id = author.author_id,
+                            name = author.name,
+                            bio = author.bio,
+                            dob = author.dob,
+                            nationally = author.nationally,
+                        },
+                        publisher = b.publisher,
+                        price = b.price,
+                        category_id = b.category_id,
+                        image_url = b.image_url,
+                        publisher_year = b.publisher_year,
+                        is_bn = b.is_bn,
+                        quantity = b.quantity,
+                        create_at = b.created_at,
+                        language = bookDetail.language,
+                        number_of_page = bookDetail.number_of_page,
+                        file_demo_url = bookDetail.file_demo_url,
+                        description = bookDetail.description,
+                    };
+                }));
+
                 return new
                 {
                     status = HttpStatusCode.OK,
@@ -273,7 +418,7 @@ namespace book_shop.Services.Implementations
                     data = bookDtos,
                 };
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy sách theo nhà xuất bản !");
                 return new
@@ -342,6 +487,26 @@ namespace book_shop.Services.Implementations
                 {
                     _logger.LogError("Không tìm thấy chi tiết sách có id {id} !", id);
                     return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy chi tiết sách !" };
+                }
+
+                if(book.category_id.HasValue && book.category_id != existingBook.category_id)
+                {
+                    var existingCategory = await _categoryRepository.GetByIdAsync(book.category_id.Value);
+                    if (existingCategory == null)
+                    {
+                        _logger.LogError("Không tìm thấy thể loại có id {categoryId} !", book.category_id.Value);
+                        return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy thể loại !" };
+                    }
+                }
+
+                if (book.author_id.HasValue && book.author_id != existingBook.author_id)
+                {
+                    var existingAuthor = await _authorRepository.GetByIdAsync(book.author_id.Value);
+                    if (existingAuthor == null)
+                    {
+                        _logger.LogError("Không tìm thấy tác giả có id {authorId} !", book.author_id.Value);
+                        return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy tác giả !" };
+                    }
                 }
 
                 // Cập nhật sách nếu có giá trị
