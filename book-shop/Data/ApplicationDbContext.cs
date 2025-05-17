@@ -16,6 +16,7 @@ namespace book_shop.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Book> Books { get; set; }
         public DbSet<BookDetail> BookDetails { get; set; }
+        public DbSet<Author> Authors { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
@@ -52,7 +53,10 @@ namespace book_shop.Data
                 .Property(bd => bd.detail_id)
                 .ValueGeneratedOnAdd();
 
-
+            modelBuilder.Entity<Book>()
+               .HasMany(b => b.authors)
+               .WithMany(a => a.books)
+               .UsingEntity(j => j.ToTable("BookAuthors")); 
 
             base.OnModelCreating(modelBuilder);
         }
