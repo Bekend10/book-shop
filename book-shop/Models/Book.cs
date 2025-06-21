@@ -19,5 +19,6 @@ namespace book_shop.Models
         public Category category { get; set; } 
         public BookDetail bookDetail { get; set; }
         public ICollection<Author> authors { get; set; }
+        public ICollection<CartDetail> cartDetails { get; set; }
     }
 }
