@@ -17,6 +17,8 @@ namespace book_shop.Data
         public DbSet<Book> Books { get; set; }
         public DbSet<BookDetail> BookDetails { get; set; }
         public DbSet<Author> Authors { get; set; }
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartDetail> CartDetails { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
@@ -28,6 +30,11 @@ namespace book_shop.Data
                 .HasOne(u => u.Address)
                 .WithOne(a => a.User)
                 .HasForeignKey<Address>(a => a.address_id);
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Cart)
+                .WithOne(c => c.User)
+                .HasForeignKey<Cart>(c => c.user_id);
 
             modelBuilder.Entity<Account>()
                 .HasOne(a => a.role)
@@ -56,7 +63,26 @@ namespace book_shop.Data
             modelBuilder.Entity<Book>()
                .HasMany(b => b.authors)
                .WithMany(a => a.books)
-               .UsingEntity(j => j.ToTable("BookAuthors")); 
+               .UsingEntity(j => j.ToTable("BookAuthors"));
+
+            modelBuilder.Entity<Cart>()
+                .HasMany(c => c.cart_detail)
+                .WithOne(cd => cd.cart)
+                .HasForeignKey(cd => cd.cart_id)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CartDetail>()
+                .HasKey(bd => bd.cart_detail_id);
+
+            modelBuilder.Entity<CartDetail>()
+                .Property(cd => cd.cart_detail_id)
+                .ValueGeneratedOnAdd();
+
+            modelBuilder.Entity<CartDetail>()
+                .HasOne(cd => cd.book)
+                .WithMany(b => b.cartDetails)
+                .HasForeignKey(cd => cd.book_id)
+                .OnDelete(DeleteBehavior.Restrict);
 
             base.OnModelCreating(modelBuilder);
         }

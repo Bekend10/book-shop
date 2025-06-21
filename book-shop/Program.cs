@@ -47,7 +47,10 @@ builder.Services.AddScoped<IBookDetailRepository, BookDetailRepository>();
 builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
 builder.Services.AddScoped<IAuthorService, AuthorService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
-
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<ICartDetailRepository, CartDetailRepository>();
+builder.Services.AddScoped<ICartDetailService, CartDetailService>();
 
 builder.Services.AddHttpClient("CloudinaryService", client =>
 {
