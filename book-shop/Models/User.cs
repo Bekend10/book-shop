@@ -17,5 +17,6 @@ namespace book_shop.Models
         public Account Account { get; set; }
         public Address Address { get; set; }
         public Cart Cart { get; set; }
+        public ICollection<Order> Order { get; set; }
     }
 }

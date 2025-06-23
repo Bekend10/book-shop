@@ -42,8 +42,14 @@ namespace book_shop.Services.Implementations
                 var cart = await _cartRepository.GetCartByUserIdAsync(userId);
                 if (cart == null)
                 {
-                    cart = new Cart { user_id = userId, created_at = DateTime.Now, total_amount = dto.quantity * book.price };
-                    await _cartRepository.AddAsync(cart); // cart_id sẽ được EF gán
+                    var Newcart = new Cart
+                    {
+                        user_id = userId,
+                        total_amount = 0,
+                        created_at = DateTime.UtcNow,
+                        updated_at = DateTime.UtcNow
+                    };
+                    await _cartRepository.AddAsync(Newcart); // cart_id sẽ được EF gán
                 }
 
                 // Lấy lại cart_id đảm bảo EF đã gán
@@ -209,25 +215,26 @@ namespace book_shop.Services.Implementations
         {
             try
             {
-                var userId = _userHelper.GetCurrentUserId();
-                var cart = await _cartRepository.GetCartByUserIdAsync(userId);
+                var cart = await _cartRepository.GetCartByUserIdAsync(_userHelper.GetCurrentUserId());
                 if (cart == null) return new { status = HttpStatusCode.NotFound, msg = "Giỏ hàng không tồn tại" };
-
                 var detail = await _cartDetailRepository.GetByCartIdAndBookIdAsync(cart.cart_id, bookId);
                 if (detail == null) return new { status = HttpStatusCode.NotFound, msg = "Sách không có trong giỏ hàng" };
-
                 var book = await _bookRepository.GetByIdAsync(bookId);
-                if (book != null)
+                if (book == null) return new { status = HttpStatusCode.NotFound, msg = "Sách không tồn tại" };
+                // Xoá giỏ hàng khi đặt hàng và xoá luôn giỏ hàng chi tiết
+                await _cartDetailRepository.DeleteAsync(detail.cart_detail_id);
+                var details = await _cartDetailRepository.GetByCartIdAsync(cart.cart_id);
+                if (details.Count == 0)
                 {
-                    book.quantity += detail.quantity;
-                    await _bookRepository.UpdateAsync(book);
+                    await _cartRepository.DeleteAsync(cart.cart_id);
+                    return new { status = HttpStatusCode.OK, msg = "Giỏ hàng đã được xoá" };
                 }
 
-                await _cartDetailRepository.DeleteByCartIdAndBookIdAsync(detail.cart_id, detail.book_id);
-                cart.total_amount -= detail.unit_price * detail.quantity;
-                await _cartRepository.UpdateAsync(cart);
-
-                return new { status = HttpStatusCode.OK, msg = "Xóa sách khỏi giỏ hàng thành công !" };
+                return new
+                {
+                    status = HttpStatusCode.OK,
+                    message = "Sách đã được xoá khỏi giỏ hàng !",
+                };
             }
             catch (Exception ex)
             {
@@ -263,7 +270,15 @@ namespace book_shop.Services.Implementations
 
                 var details = await _cartDetailRepository.GetByCartIdAsync(cart.cart_id);
                 cart.total_amount = details.Sum(cd => cd.unit_price * cd.quantity);
-                await _cartRepository.UpdateAsync(cart);
+                Cart newCart = new Cart
+                {
+                    cart_id = cart.cart_id,
+                    user_id = cart.user_id,
+                    total_amount = cart.total_amount,
+                    created_at = cart.created_at,
+                    updated_at = DateTime.UtcNow
+                };
+                await _cartRepository.UpdateAsync(newCart);
 
                 return new { status = HttpStatusCode.OK, msg = "Cập nhật thành công" };
             }
@@ -277,6 +292,42 @@ namespace book_shop.Services.Implementations
         public Task<object> CheckoutAsync()
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<object> GetCartByUserIdAsync(int userId)
+        {
+            if (userId == null)
+            {
+                return new { status = HttpStatusCode.Unauthorized, msg = "Bạn cần đăng nhập để xem giỏ hàng" };
+            }
+            var cart = await _cartRepository.GetCartByUserIdAsync(userId);
+            if (cart == null)
+            {
+                return new { status = HttpStatusCode.NotFound, msg = "Giỏ hàng không tồn tại" };
+            }
+            var cartDetails = await _cartDetailRepository.GetByCartIdAsync(cart.cart_id);
+            var cartDto = new CartDto
+            {
+                cart_id = cart.cart_id,
+                user_id = cart.user_id,
+                total_amount = cart.total_amount,
+                created_at = cart.created_at,
+                updated_at = cart.updated_at,
+                items = cartDetails.Select(cd => new CartDetailDto
+                {
+                    cart_detail_id = cd.cart_detail_id,
+                    book_id = cd.book_id,
+                    quantity = cd.quantity,
+                    unit_price = cd.unit_price,
+                }).ToList()
+            };
+            return new
+            {
+                status = HttpStatusCode.OK,
+                msg = "Lấy giỏ hàng thành công",
+                data = cartDto
+            };
+
         }
     }
 }

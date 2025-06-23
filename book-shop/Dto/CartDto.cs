@@ -15,6 +15,9 @@
     {
         public int cart_detail_id { get; set; }
         public int cart_id { get; set; }
+        public int user_id { get; set; }
+        public int total_amount { get; set; }
+        public List<CartDetailDto> items { get; set; }
         public int book_id { get; set; }
         public int quantity { get; set; }
         public int unit_price { get; set; }

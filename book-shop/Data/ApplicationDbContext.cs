@@ -19,6 +19,9 @@ namespace book_shop.Data
         public DbSet<Author> Authors { get; set; }
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartDetail> CartDetails { get; set; }
+        public DbSet<Method> Methods { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderDetail> OrderDetails { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
@@ -82,6 +85,30 @@ namespace book_shop.Data
                 .HasOne(cd => cd.book)
                 .WithMany(b => b.cartDetails)
                 .HasForeignKey(cd => cd.book_id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Method>()
+                .HasMany(m => m.orders)
+                .WithOne(o => o.method)
+                .HasForeignKey(o => o.method_id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.User)
+                .WithMany(u => u.Order)
+                .HasForeignKey(o => o.user_id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.orderDetail)
+                .WithOne(od => od.order)
+                .HasForeignKey<OrderDetail>(od => od.order_id)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<OrderDetail>()
+                .HasOne(od => od.book)
+                .WithMany(b => b.orderDetail)
+                .HasForeignKey(od => od.book_id)
                 .OnDelete(DeleteBehavior.Restrict);
 
             base.OnModelCreating(modelBuilder);

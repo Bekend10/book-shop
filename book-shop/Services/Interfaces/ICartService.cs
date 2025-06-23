@@ -6,6 +6,7 @@ namespace book_shop.Services.Interfaces
     public interface ICartService
     {
         Task<object> AddToCartAsync(AddToCartDto dto);
+        Task<object> GetCartByUserIdAsync(int userId);
         Task<object> RemoveFromCartAsync(int bookId);
         Task<object> ClearCartAsync();
         Task<List<CartDetailDto>> GetCartDetailsAsync();
