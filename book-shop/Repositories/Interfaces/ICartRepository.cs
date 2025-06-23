@@ -5,6 +5,6 @@ namespace book_shop.Repositories.Interfaces
 {
     public interface ICartRepository : IRepository<Cart>
     {
-        Task<Cart> GetCartByUserIdAsync(int userId);
+        Task<CartDetailDto> GetCartByUserIdAsync(int userId);
     }
 }

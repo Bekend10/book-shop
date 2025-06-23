@@ -51,7 +51,12 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<ICartDetailRepository, CartDetailRepository>();
 builder.Services.AddScoped<ICartDetailService, CartDetailService>();
-
+builder.Services.AddScoped<IMethodRepository, MethodRepository>();
+builder.Services.AddScoped<IMethodService, MethodService>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
+builder.Services.AddScoped<IOrderDetailService, OrderDetailService>();
 builder.Services.AddHttpClient("CloudinaryService", client =>
 {
     client.BaseAddress = new Uri("https://localhost:7080");

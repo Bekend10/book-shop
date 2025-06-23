@@ -90,6 +90,7 @@ namespace book_shop.Repositories.Implementations
             {
                 book.title = entity.title;
                 book.author_id = entity.author_id;
+                book.quantity = entity.quantity;
                 book.publisher = entity.publisher;
                 book.price = entity.price;
                 book.category_id = entity.category_id;
