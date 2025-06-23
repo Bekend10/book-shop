@@ -10,5 +10,6 @@ namespace book_shop.Services.Interfaces
         Task<object> CreateAsync(CreateUserDto dto);
         Task<object> UpdateAsync(int id, UpdateUserDto dto);
         Task<object> DeleteAsync(int id);
+        Task<object> GetMyInformation();
     }
 }

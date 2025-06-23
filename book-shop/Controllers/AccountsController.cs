@@ -1,5 +1,7 @@
 ﻿using book_shop.Dto;
+using book_shop.Services.Implementations;
 using book_shop.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -7,7 +9,7 @@ using System.Net;
 namespace book_shop.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v1/accounts")]
     public class AccountsController : ControllerBase
     {
         private readonly IAccountService _accountService;
@@ -38,7 +40,7 @@ namespace book_shop.Controllers
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddHours(1)
+                    Expires = DateTime.Now.AddHours(1)
                 });
 
                 return Ok(result);
@@ -61,5 +63,69 @@ namespace book_shop.Controllers
             });
         }
 
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
+        {
+            var result = await _accountService.RefreshTokenAsync(refreshToken);
+            if (result is not null && result.GetType() == typeof(System.Object) && ((dynamic)result).status == 401)
+            {
+                return Unauthorized(new { message = ((dynamic)result).message });
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPut]
+        [Authorize]
+        [Route("change-password")]
+        public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
+        {
+            var result = await _accountService.ChangePassword(dto);
+            return Ok(result);
+        }
+
+        [HttpPut]
+        [Route("reset-password")]
+        public async Task<IActionResult> ResetPassword(string email)
+        {
+            var result = await _accountService.ForgotPasswordAsync(email);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Authorize(Roles ="admin")]
+        [Route("get-accounts")]
+        public async Task<IActionResult> GetAccounts()
+        {
+            var result = await _accountService.GetAllAccounts();
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Authorize(Roles ="admin")]
+        [Route("get-detail")]
+        public async Task<IActionResult> GetAccountById(int id)
+        {
+            var result = await _accountService.GetAccountById(id);
+            if(result == null) { return NotFound(); }
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        [Authorize(Roles ="admin")]
+        [Route("delete-account")]
+        public async Task<IActionResult> DeleteAccount(int id)
+        {
+            var result = await _accountService.DeleteAccountAysnc(id);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("verify-email")]
+        public async Task<IActionResult> VerifyEmail(string email)
+        {
+            var result = await _accountService.VerifyEmailAsync(email);
+            return Ok(result);
+        }
     }
 }

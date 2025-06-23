@@ -31,10 +31,13 @@
     <Folder Include="EmailTemplates\Orders\" />
     <Folder Include="Extensions\" />
     <Folder Include="Constants\" />
-    <Folder Include="Middlewares\" />
     <Folder Include="Validations\" />
     <Folder Include="Queries\" />
     <Folder Include="UnitOfWork\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\cloudinary-service\cloudinary-service.csproj" />
   </ItemGroup>
 
 </Project>

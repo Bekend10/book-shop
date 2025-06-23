@@ -30,8 +30,7 @@ namespace book_shop.Services.Implementations
                 dob = dto.dob,
                 gender = dto.gender,
                 profile_image = dto.profile_image,
-                address_id = dto.address_id,
-                created_at = DateTime.UtcNow
+                created_at = DateTime.Now
             };
 
             await _userRepository.AddAsync(user);
@@ -57,6 +56,31 @@ namespace book_shop.Services.Implementations
                 user.last_name = dto.last_name;
                 isUpdated = true;
             }
+            if (!string.IsNullOrWhiteSpace(dto.country) && dto.country != user.Address.country)
+            {
+                user.Address.country = dto.country;
+                isUpdated = true;
+            }
+            if (!string.IsNullOrWhiteSpace(dto.councious) && dto.councious != user.Address.councious)
+            {
+                user.Address.councious = dto.councious;
+                isUpdated = true;
+            }
+            if (!string.IsNullOrWhiteSpace(dto.commune) && dto.commune != user.Address.commune)
+            {
+                user.Address.commune = dto.commune;
+                isUpdated = true;
+            }
+            if (!string.IsNullOrWhiteSpace(dto.district) && dto.district != user.Address.district)
+            {
+                user.Address.district = dto.district;
+                isUpdated = true;
+            }
+            if (!string.IsNullOrWhiteSpace(dto.house_number) && dto.house_number != user.Address.house_number)
+            {
+                user.Address.house_number = dto.house_number;
+                isUpdated = true;
+            }
 
             if (dto.dob.HasValue && dto.dob.Value.Date != user.dob.Date)
             {
@@ -73,12 +97,6 @@ namespace book_shop.Services.Implementations
             if (!string.IsNullOrWhiteSpace(dto.profile_image) && dto.profile_image != user.profile_image)
             {
                 user.profile_image = dto.profile_image;
-                isUpdated = true;
-            }
-
-            if (dto.address_id.HasValue && dto.address_id != user.address_id)
-            {
-                user.address_id = (int)dto.address_id;
                 isUpdated = true;
             }
 
@@ -100,6 +118,27 @@ namespace book_shop.Services.Implementations
 
             await _userRepository.DeleteAsync(id);
             return new { status = HttpStatusCode.OK, msg = "Xoá người dùng thành công!" };
+        }
+
+        public async Task<object> GetMyInformation()
+        {
+            var userId = await _userRepository.GetCurrentUserIdAsync();
+            if (userId < 0)
+            {
+                return new
+                {
+                    status = HttpStatusCode.NotFound,
+                    msg = "Không tìm thấy người dùng"
+                };
+            }
+
+            var infor = await _userRepository.GetByIdAsync(userId);
+            return new
+            {
+                status = HttpStatusCode.OK,
+                msg = "Lấy thông tin người dùng thành công !",
+                infor
+            };
         }
     }
 

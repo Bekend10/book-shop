@@ -22,6 +22,21 @@ namespace book_shop.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("AuthorBook", b =>
+                {
+                    b.Property<int>("authorsauthor_id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("booksbook_id")
+                        .HasColumnType("int");
+
+                    b.HasKey("authorsauthor_id", "booksbook_id");
+
+                    b.HasIndex("booksbook_id");
+
+                    b.ToTable("BookAuthors", (string)null);
+                });
+
             modelBuilder.Entity("book_shop.Models.Account", b =>
                 {
                     b.Property<int>("account_id")
@@ -65,6 +80,336 @@ namespace book_shop.Migrations
                         .IsUnique();
 
                     b.ToTable("Accounts");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Address", b =>
+                {
+                    b.Property<int>("address_id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("commune")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("councious")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("country")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("district")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("house_number")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("address_id");
+
+                    b.ToTable("Address");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Author", b =>
+                {
+                    b.Property<int>("author_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("author_id"));
+
+                    b.Property<string>("bio")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("dob")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("nationally")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("author_id");
+
+                    b.ToTable("Authors");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Book", b =>
+                {
+                    b.Property<int>("book_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("book_id"));
+
+                    b.Property<int>("author_id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("category_id")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("created_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("image_url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("is_bn")
+                        .HasColumnType("int");
+
+                    b.Property<int>("price")
+                        .HasColumnType("int");
+
+                    b.Property<string>("publisher")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("publisher_year")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("book_id");
+
+                    b.HasIndex("category_id");
+
+                    b.ToTable("Books");
+                });
+
+            modelBuilder.Entity("book_shop.Models.BookDetail", b =>
+                {
+                    b.Property<int>("detail_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("detail_id"));
+
+                    b.Property<int>("book_id")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("create_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("file_demo_url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("image_url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("is_bn")
+                        .HasColumnType("int");
+
+                    b.Property<string>("language")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("number_of_page")
+                        .HasColumnType("int");
+
+                    b.Property<int>("price")
+                        .HasColumnType("int");
+
+                    b.Property<string>("publisher")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("publisher_year")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("detail_id");
+
+                    b.HasIndex("book_id")
+                        .IsUnique();
+
+                    b.ToTable("BookDetails");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Cart", b =>
+                {
+                    b.Property<int>("cart_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("cart_id"));
+
+                    b.Property<DateTime>("created_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("total_amount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("updated_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("user_id")
+                        .HasColumnType("int");
+
+                    b.HasKey("cart_id");
+
+                    b.HasIndex("user_id")
+                        .IsUnique();
+
+                    b.ToTable("Carts");
+                });
+
+            modelBuilder.Entity("book_shop.Models.CartDetail", b =>
+                {
+                    b.Property<int>("cart_detail_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("cart_detail_id"));
+
+                    b.Property<int>("book_id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("cart_id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("unit_price")
+                        .HasColumnType("int");
+
+                    b.HasKey("cart_detail_id");
+
+                    b.HasIndex("book_id");
+
+                    b.HasIndex("cart_id");
+
+                    b.ToTable("CartDetails");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Category", b =>
+                {
+                    b.Property<int>("category_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("category_id"));
+
+                    b.Property<DateTime>("created_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("created_by")
+                        .HasColumnType("int");
+
+                    b.Property<string>("description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("category_id");
+
+                    b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Method", b =>
+                {
+                    b.Property<int>("method_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("method_id"));
+
+                    b.Property<string>("description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("method_name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("method_id");
+
+                    b.ToTable("Methods");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Order", b =>
+                {
+                    b.Property<int>("order_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("order_id"));
+
+                    b.Property<int>("method_id")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("order_date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("total_amount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("user_id")
+                        .HasColumnType("int");
+
+                    b.HasKey("order_id");
+
+                    b.HasIndex("method_id");
+
+                    b.HasIndex("user_id");
+
+                    b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("book_shop.Models.OrderDetail", b =>
+                {
+                    b.Property<int>("order_detail_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("order_detail_id"));
+
+                    b.Property<int>("book_id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("order_id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("unit_price")
+                        .HasColumnType("int");
+
+                    b.HasKey("order_detail_id");
+
+                    b.HasIndex("book_id");
+
+                    b.HasIndex("order_id")
+                        .IsUnique();
+
+                    b.ToTable("OrderDetails");
                 });
 
             modelBuilder.Entity("book_shop.Models.Role", b =>
@@ -125,6 +470,21 @@ namespace book_shop.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("AuthorBook", b =>
+                {
+                    b.HasOne("book_shop.Models.Author", null)
+                        .WithMany()
+                        .HasForeignKey("authorsauthor_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("book_shop.Models.Book", null)
+                        .WithMany()
+                        .HasForeignKey("booksbook_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("book_shop.Models.Account", b =>
                 {
                     b.HasOne("book_shop.Models.Role", "role")
@@ -144,6 +504,138 @@ namespace book_shop.Migrations
                     b.Navigation("user");
                 });
 
+            modelBuilder.Entity("book_shop.Models.Address", b =>
+                {
+                    b.HasOne("book_shop.Models.User", "User")
+                        .WithOne("Address")
+                        .HasForeignKey("book_shop.Models.Address", "address_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Book", b =>
+                {
+                    b.HasOne("book_shop.Models.Category", "category")
+                        .WithMany("book")
+                        .HasForeignKey("category_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("category");
+                });
+
+            modelBuilder.Entity("book_shop.Models.BookDetail", b =>
+                {
+                    b.HasOne("book_shop.Models.Book", "book")
+                        .WithOne("bookDetail")
+                        .HasForeignKey("book_shop.Models.BookDetail", "book_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("book");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Cart", b =>
+                {
+                    b.HasOne("book_shop.Models.User", "User")
+                        .WithOne("Cart")
+                        .HasForeignKey("book_shop.Models.Cart", "user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("book_shop.Models.CartDetail", b =>
+                {
+                    b.HasOne("book_shop.Models.Book", "book")
+                        .WithMany("cartDetails")
+                        .HasForeignKey("book_id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("book_shop.Models.Cart", "cart")
+                        .WithMany("cart_detail")
+                        .HasForeignKey("cart_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("book");
+
+                    b.Navigation("cart");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Order", b =>
+                {
+                    b.HasOne("book_shop.Models.Method", "method")
+                        .WithMany("orders")
+                        .HasForeignKey("method_id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("book_shop.Models.User", "User")
+                        .WithMany("Order")
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("method");
+                });
+
+            modelBuilder.Entity("book_shop.Models.OrderDetail", b =>
+                {
+                    b.HasOne("book_shop.Models.Book", "book")
+                        .WithMany("orderDetail")
+                        .HasForeignKey("book_id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("book_shop.Models.Order", "order")
+                        .WithOne("orderDetail")
+                        .HasForeignKey("book_shop.Models.OrderDetail", "order_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("book");
+
+                    b.Navigation("order");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Book", b =>
+                {
+                    b.Navigation("bookDetail")
+                        .IsRequired();
+
+                    b.Navigation("cartDetails");
+
+                    b.Navigation("orderDetail");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Cart", b =>
+                {
+                    b.Navigation("cart_detail");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Category", b =>
+                {
+                    b.Navigation("book");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Method", b =>
+                {
+                    b.Navigation("orders");
+                });
+
+            modelBuilder.Entity("book_shop.Models.Order", b =>
+                {
+                    b.Navigation("orderDetail")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("book_shop.Models.Role", b =>
                 {
                     b.Navigation("account");
@@ -153,6 +645,14 @@ namespace book_shop.Migrations
                 {
                     b.Navigation("Account")
                         .IsRequired();
+
+                    b.Navigation("Address")
+                        .IsRequired();
+
+                    b.Navigation("Cart")
+                        .IsRequired();
+
+                    b.Navigation("Order");
                 });
 #pragma warning restore 612, 618
         }

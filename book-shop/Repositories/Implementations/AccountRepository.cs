@@ -1,7 +1,9 @@
 ﻿using book_shop.Data;
+using book_shop.Dto;
 using book_shop.Models;
 using book_shop.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace book_shop.Repositories.Implementations
 {
@@ -14,11 +16,9 @@ namespace book_shop.Repositories.Implementations
             _context = context;
         }
 
-        public async Task<User> GetUserByEmailAsync(string email)
+        public async Task<Account> GetAccountByEmailAsync(string email)
         {
-            return await _context.Users
-                .Include(u => u.Account)
-                .FirstOrDefaultAsync(u => u.email == email);
+            return await _context.Accounts.FirstOrDefaultAsync(u => u.email == email);
         }
 
         public async Task AddUserWithAccountAsync(User user, Account account)
@@ -31,12 +31,31 @@ namespace book_shop.Repositories.Implementations
 
         public async Task<IEnumerable<Account>> GetAllAsync()
         {
-            return await _context.Accounts.ToListAsync();
+            return await _context.Accounts
+                .Select(_ => new Account
+                {
+                    account_id = _.account_id,
+                    email = _.email,
+                    refresh_token = _.refresh_token,
+                    refresh_token_ext = _.refresh_token_ext,
+                    user_id = _.user_id,
+                    role_id = _.role_id,
+                })
+                .ToListAsync();
         }
 
         public async Task<Account> GetByIdAsync(int id)
         {
-            return await _context.Accounts.Include(a => a.user).FirstOrDefaultAsync(_ => _.account_id == id);
+            return await _context.Accounts.Where(x => x.account_id == id)
+                .Select(_ => new Account
+                {
+                    account_id = _.account_id,
+                    email = _.email,
+                    refresh_token = _.refresh_token,
+                    refresh_token_ext = _.refresh_token_ext,
+                    user_id = _.user_id,
+                    role_id = _.role_id,
+                }).FirstOrDefaultAsync();
         }
 
         public async Task AddAsync(Account entity)
@@ -60,5 +79,9 @@ namespace book_shop.Repositories.Implementations
                 await _context.SaveChangesAsync();
             }
         }
+        public async Task<Account> GetByRefreshTokenAsync(string refreshToken)
+        {
+            return await _context.Accounts.FirstOrDefaultAsync(u => u.refresh_token == refreshToken);
+        }        
     }
 }
