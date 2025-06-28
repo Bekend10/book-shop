@@ -9,5 +9,6 @@ namespace book_shop.Models
         public string method_name { get; set; }
         public string description { get; set; }
         public ICollection<Order> orders { get; set; }
+        public ICollection<Payment> payments { get; set; }
     }
 }

@@ -9,14 +9,6 @@
             Shipped,
             Delivered,
             Cancelled
-        }
-
-        public enum PaymentStatus
-        {
-            Pending,
-            Completed,
-            Failed,
-            Refunded
-        }
+        }     
     }
 }

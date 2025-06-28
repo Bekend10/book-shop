@@ -22,6 +22,7 @@ namespace book_shop.Data
         public DbSet<Method> Methods { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
+        public DbSet<Payment> Payments { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
@@ -93,6 +94,12 @@ namespace book_shop.Data
                 .HasForeignKey(o => o.method_id)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Method>()
+                .HasMany(m => m.payments)
+                .WithOne(p => p.method)
+                .HasForeignKey(p => p.method_id)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.User)
                 .WithMany(u => u.Order)
@@ -105,11 +112,28 @@ namespace book_shop.Data
                 .HasForeignKey<OrderDetail>(od => od.order_id)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Payment)
+                .WithOne(p => p.order)
+                .HasForeignKey<Payment>(p => p.order_id)
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<OrderDetail>()
                 .HasOne(od => od.book)
                 .WithMany(b => b.orderDetail)
                 .HasForeignKey(od => od.book_id)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.method)
+                .WithMany(m => m.payments)
+                .HasForeignKey(p => p.method_id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.payment_status)
+                .HasConversion<string>();
+
 
             base.OnModelCreating(modelBuilder);
         }
