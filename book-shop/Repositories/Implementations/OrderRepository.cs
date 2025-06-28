@@ -88,11 +88,11 @@ namespace book_shop.Repositories.Implementations
 
         public async Task UpdateAsync(Order entity)
         {
-            var order = await _context.Orders.FirstOrDefaultAsync(o => o.order_id == entity.order_id);
+            var order = await _context.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.order_id == entity.order_id);
             if (order != null)
             {
                 order.status = entity.status;
-                _context.SaveChangesAsync();
+               await _context.SaveChangesAsync();
             }
         }
     }

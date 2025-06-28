@@ -15,5 +15,6 @@ namespace book_shop.Models
         public Method method { get; set; }
         public OrderDetail orderDetail { get; set; }
         public User User { get; set; }
+        public Payment Payment { get; set; }
     }
 }

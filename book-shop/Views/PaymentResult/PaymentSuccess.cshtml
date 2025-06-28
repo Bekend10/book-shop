@@ -1,0 +1,332 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model book_shop.Models.Payment
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán thành công - VNPAY</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .success-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .success-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: bounceIn 0.8s ease-out;
+        }
+
+        .success-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
+        }
+
+        @@keyframes bounceIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .vnpay-logo {
+            width: 120px;
+            height: 40px;
+            margin: 0 auto 30px;
+            background: #1976d2;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .transaction-details {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        .detail-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .amount {
+            color: #27ae60;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #6c757d;
+            border: 2px solid #e9ecef;
+        }
+
+        .btn-secondary:hover {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+        }
+
+        .footer-note {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        @@media (max-width: 600px) {
+            .success-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff6b6b;
+            animation: confetti-fall 3s linear infinite;
+        }
+
+        .confetti:nth-child(1) { left: 10%; animation-delay: 0s; background: #ff6b6b; }
+        .confetti:nth-child(2) { left: 20%; animation-delay: 0.5s; background: #4ecdc4; }
+        .confetti:nth-child(3) { left: 30%; animation-delay: 1s; background: #45b7d1; }
+        .confetti:nth-child(4) { left: 40%; animation-delay: 1.5s; background: #96ceb4; }
+        .confetti:nth-child(5) { left: 50%; animation-delay: 2s; background: #feca57; }
+        .confetti:nth-child(6) { left: 60%; animation-delay: 0.3s; background: #ff9ff3; }
+        .confetti:nth-child(7) { left: 70%; animation-delay: 0.8s; background: #54a0ff; }
+        .confetti:nth-child(8) { left: 80%; animation-delay: 1.3s; background: #5f27cd; }
+        .confetti:nth-child(9) { left: 90%; animation-delay: 1.8s; background: #00d2d3; }
+
+        @@keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <!-- Confetti Animation -->
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+        <div class="confetti"></div>
+
+        <div class="vnpay-logo">VNPAY</div>
+
+        <div class="success-icon">
+            <svg viewBox="0 0 24 24">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+            </svg>
+        </div>
+
+        <div class="status-badge">Thanh toán thành công</div>
+
+        <h1>Giao dịch hoàn tất!</h1>
+        <p class="subtitle">Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi</p>
+
+        <div class="transaction-details">
+            <div class="detail-row">
+                <span class="detail-label">Mã giao dịch:</span>
+                <span class="detail-value">#VNPAY_@Model.payment_id</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Thời gian:</span>
+                <span class="detail-value">@Model.payment_date.ToString("dd/MM/yyyy HH:mm:ss")</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Phương thức:</span>
+                <span class="detail-value">VNPAY QR</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Ngân hàng:</span>
+                <span class="detail-value">NCB</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Nội dung:</span>
+                <span class="detail-value">Thanh toán đơn hàng @Model.order_id</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Số tiền:</span>
+                <span class="detail-value amount">@($"{Model.amount:N0} VNĐ")</span>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button class="btn btn-primary" onclick="goHome()">
+                Về trang chủ
+            </button>
+            <button class="btn btn-secondary" onclick="downloadReceipt()">
+                Tải biên lai
+            </button>
+        </div>
+
+        <div class="footer-note">
+            <p>Biên lai đã được gửi đến email của bạn</p>
+            <p>Mọi thắc mắc xin liên hệ hotline: 0859 293 744</p>
+        </div>
+    </div>
+
+    <script>
+        function goHome() {
+            
+        }
+
+        function downloadReceipt() {
+            alert('Đang tải biên lai...');
+        }
+
+        document.querySelector('.success-icon').addEventListener('click', function() {
+            this.style.animation = 'bounceIn 0.8s ease-out';
+            setTimeout(() => {
+                this.style.animation = '';
+            }, 800);
+        });
+    </script>
+</body>
+</html>
