@@ -15,7 +15,7 @@ namespace payment_service.Controllers
             _vnpayService = vnpayService;
         }
 
-        [HttpPost("create")]
+        [HttpPost("create-by-vnpay")]
         public IActionResult Create([FromBody] VnpayPaymentRequest model)
         {
             var context = HttpContext;
