@@ -3,6 +3,7 @@ using book_shop.EmailService;
 using book_shop.Models;
 using book_shop.Repositories.Interfaces;
 using book_shop.Services.Interfaces;
+using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -16,15 +17,16 @@ namespace book_shop.Services.Implementations
         private readonly IJWTService _jwtService;
         private readonly ILogger<AccountService> _logger;
         private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
 
-
-        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository)
+        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository, IConfiguration configuration)
         {
             _accountRepository = accountRepository;
             _jwtService = jwtService;
             _logger = logger;
             _emailService = emailService;
             _userRepository = userRepository;
+            _configuration = configuration;
         }
 
         public async Task<object> RegisterAsync(RegisterDto registerDto)
@@ -37,14 +39,15 @@ namespace book_shop.Services.Implementations
 
                 var passwordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.password);
 
-
-
+                var imgSettings = _configuration.GetSection("Images");
+                var img = imgSettings["DefaultImage"];
                 var user = new User
                 {
                     first_name = registerDto.first_name,
                     last_name = registerDto.last_name,
                     email = registerDto.email,
                     created_at = DateTime.Now,
+                    profile_image = img,
                     address_id = 5,
                 };
                 var full_name = registerDto.first_name + " " + registerDto.last_name;
@@ -102,13 +105,25 @@ namespace book_shop.Services.Implementations
                 account.refresh_token = refreshToken;
                 account.refresh_token_ext = DateTime.Now.AddDays(7);
                 await _accountRepository.UpdateAsync(account);
+
+                var user = await _userRepository.GetByIdAsync(account.user_id);
+
                 return new
                 {
                     status = HttpStatusCode.OK,
                     msg = "Đăng nhập thành công !",
                     access_token = accessToken,
                     refresh_token = refreshToken,
-                    user = account
+                    user = new UserRespone
+                    {
+                        user_id = user.user_id,
+                        email = account.email,
+                        first_name = user.first_name,
+                        last_name = user.last_name,
+                        full_name = user.first_name + " " + user.last_name,
+                        profile_image = user.profile_image,
+                        role = account.role_id == 1 ? "admin" : "user",
+                    }
                 };
             }
             catch (Exception ex)
