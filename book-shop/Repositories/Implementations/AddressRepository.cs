@@ -43,6 +43,18 @@ namespace book_shop.Repositories.Implementations
             var address = await GetByIdAsync(entity.address_id);
             if (address != null)
             {
+                address.country = entity.country;
+                address.councious = entity.councious;
+                address.district = entity.district;
+                address.commune = entity.commune;
+                address.house_number = entity.house_number;
+
+                if (entity.User != null)
+                {
+                    _context.Users.Attach(entity.User);
+                    address.User = entity.User;
+                }
+
                 _context.Address.Update(address);
                 await _context.SaveChangesAsync();
             }
