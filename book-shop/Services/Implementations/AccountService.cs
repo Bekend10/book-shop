@@ -1,14 +1,9 @@
 ﻿using book_shop.Dto;
 using book_shop.EmailService;
 using book_shop.Models;
-using book_shop.Repositories.Implementations;
 using book_shop.Repositories.Interfaces;
 using book_shop.Services.Interfaces;
-using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using System.Net;
-using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -17,21 +12,19 @@ namespace book_shop.Services.Implementations
     public class AccountService : IAccountService
     {
         private readonly IAccountRepository _accountRepository;
-        private readonly IAddressRepository _addressRepository;
         private readonly IUserRepository _userRepository;
         private readonly IJWTService _jwtService;
         private readonly ILogger<AccountService> _logger;
         private readonly IEmailService _emailService;
 
 
-        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository, IAddressRepository addressRepository)
+        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository)
         {
             _accountRepository = accountRepository;
             _jwtService = jwtService;
             _logger = logger;
             _emailService = emailService;
             _userRepository = userRepository;
-            _addressRepository = addressRepository;
         }
 
         public async Task<object> RegisterAsync(RegisterDto registerDto)
@@ -44,16 +37,7 @@ namespace book_shop.Services.Implementations
 
                 var passwordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.password);
 
-                var address = new Address
-                {
-                    country = "",
-                    councious = "",
-                    district = "",
-                    commune = "",
-                    house_number = ""
-                };
 
-                await _addressRepository.AddAsync(address);
 
                 var user = new User
                 {
@@ -61,7 +45,7 @@ namespace book_shop.Services.Implementations
                     last_name = registerDto.last_name,
                     email = registerDto.email,
                     created_at = DateTime.Now,
-                    address_id = address.address_id,
+                    address_id = 5,
                 };
                 var full_name = registerDto.first_name + " " + registerDto.last_name;
 
@@ -123,7 +107,8 @@ namespace book_shop.Services.Implementations
                     status = HttpStatusCode.OK,
                     msg = "Đăng nhập thành công !",
                     access_token = accessToken,
-                    refresh_token = refreshToken
+                    refresh_token = refreshToken,
+                    user = account
                 };
             }
             catch (Exception ex)
