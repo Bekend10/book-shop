@@ -122,7 +122,7 @@ namespace book_shop.Services.Implementations
                         last_name = user.last_name,
                         full_name = user.first_name + " " + user.last_name,
                         profile_image = user.profile_image,
-                        role = account.role_id == 1 ? "admin" : "user",
+                        role = account.role_id == 1 ? "user" : "admin",
                     }
                 };
             }
