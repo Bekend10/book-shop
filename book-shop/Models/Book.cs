@@ -8,6 +8,7 @@ namespace book_shop.Models
         public int book_id { get; set; }
         public string title { get; set; } = string.Empty;
         public int author_id { get; set; } 
+        public int book_review_id { get; set; } 
         public DateTime publisher_year { get; set; }
         public string publisher { get; set; } = string.Empty;
         public string image_url { get; set; } = string.Empty;
@@ -21,5 +22,6 @@ namespace book_shop.Models
         public ICollection<OrderDetail> orderDetail { get; set; }
         public ICollection<Author> authors { get; set; }
         public ICollection<CartDetail> cartDetails { get; set; }
+        public ICollection<BookReview> bookReviews { get; set; }
     }
 }

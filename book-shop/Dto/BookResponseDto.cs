@@ -18,9 +18,15 @@ namespace book_shop.Dto
         public string file_demo_url { get; set; } = string.Empty;
         public string language { get; set; } = string.Empty;
         public int number_of_page { get; set; }
+        public double rating { get; set; }
+        public int count_review { get; set; }
         public int price { get; set; }
         public BookDetail BookDetail { get; set; } = null!;
         public Author author { get; set; } = null!;
+        public Category category { get; set; } = null!;
+        public ICollection<BookReview> bookReviews { get; set; }
+        public ICollection<OrderDetail> orderDetails { get; set; } = null!;
+        public ICollection<CartDetail> cartDetails { get; set; } = null!;
     }
 
 

@@ -23,6 +23,7 @@ namespace book_shop.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<BookReview> BookReviews { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
@@ -40,6 +41,13 @@ namespace book_shop.Data
                 .WithOne(c => c.User)
                 .HasForeignKey<Cart>(c => c.user_id);
 
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.BookReview)
+                .WithOne(br => br.user)
+                .HasForeignKey(br => br.user_id)
+                .OnDelete(DeleteBehavior.Cascade)
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<Account>()
                 .HasOne(a => a.role)
                 .WithMany(r => r.account)
@@ -56,6 +64,12 @@ namespace book_shop.Data
                 .HasOne(b => b.bookDetail)
                 .WithOne(d => d.book)
                 .HasForeignKey<BookDetail>(d => d.book_id);
+
+            modelBuilder.Entity<Book>()
+                .HasMany(b => b.bookReviews)
+                .WithOne(br => br.book)
+                .HasForeignKey(br => br.book_id)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<BookDetail>()
                 .HasKey(bd => bd.detail_id);

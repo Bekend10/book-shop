@@ -33,6 +33,7 @@ namespace book_shop.Repositories.Implementations
         public async Task<IEnumerable<Author>> GetAllAsync()
         {
             return await _context.Authors
+                .Include(b => b.books)
                 .AsNoTracking()
                 .ToListAsync();
         }
@@ -47,6 +48,7 @@ namespace book_shop.Repositories.Implementations
         public async Task<Author> GetByIdAsync(int id)
         {
             return await _context.Authors
+                .Include(b => b.books)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(a => a.author_id == id);
         }
