@@ -18,7 +18,7 @@ namespace book_shop.Services.Implementations
         private readonly IBookDetailRepository _bookDetailRepository;
         private readonly ILogger<BookService> _logger;
         private readonly ICloudService _cloudService;
-        public BookService(IBookRepository bookService, ILogger<BookService> logger, ICloudService cloudService, IBookDetailRepository bookDetailRepository , IAuthorRepository authorRepository , ICategoryRepository categoryRepository)
+        public BookService(IBookRepository bookService, ILogger<BookService> logger, ICloudService cloudService, IBookDetailRepository bookDetailRepository, IAuthorRepository authorRepository, ICategoryRepository categoryRepository)
         {
             _bookRepository = bookService;
             _logger = logger;
@@ -141,6 +141,7 @@ namespace book_shop.Services.Implementations
                     {
                         book_id = b.book_id,
                         title = b.title,
+                        category = await _categoryRepository.GetByIdAsync(b.category_id),
                         author = new Author
                         {
                             author_id = author.author_id,
@@ -157,6 +158,12 @@ namespace book_shop.Services.Implementations
                         is_bn = b.is_bn,
                         quantity = b.quantity,
                         create_at = b.created_at,
+                        number_of_page = b.bookDetail.number_of_page,
+                        language = b.bookDetail.language,
+                        file_demo_url = b.bookDetail.file_demo_url,
+                        description = b.bookDetail.description,
+                        rating = b.bookReviews.Where(_ => _.book_id == b.book_id).Average(br => br.rating),
+                        count_review = b.bookReviews.Count(br => br.book_id == b.book_id),
                     };
                 }));
 
@@ -190,7 +197,6 @@ namespace book_shop.Services.Implementations
                 }
                 var bookDetail = await _bookDetailRepository.GetBookDetailsByBookIdAsync(id);
                 var author = await _authorRepository.GetByIdAsync(book.author_id);
-
                 var bookDto = new BookResponseDto
                 {
                     book_id = book.book_id,
@@ -203,6 +209,9 @@ namespace book_shop.Services.Implementations
                         dob = author.dob,
                         nationally = author.nationally,
                     },
+                    category = await _categoryRepository.GetByIdAsync(book.category_id),
+                    rating = book.bookReviews.Where(_ => _.book_id == book.book_id).Average(br => br.rating),
+                    count_review = book.bookReviews.Count(br => br.book_id == book.book_id),
                     publisher = book.publisher,
                     price = book.price,
                     category_id = book.category_id,
@@ -212,9 +221,9 @@ namespace book_shop.Services.Implementations
                     quantity = book.quantity,
                     create_at = book.created_at,
                     language = bookDetail.language,
-                    number_of_page = bookDetail.number_of_page,
-                    file_demo_url = bookDetail.file_demo_url,
-                    description = bookDetail.description,
+                    number_of_page = book.bookDetail.number_of_page,
+                    file_demo_url = book.bookDetail.file_demo_url,
+                    description = book.bookDetail.description,
                 };
 
                 _logger.LogInformation("Lấy sách {id} thành công !", id);
@@ -280,6 +289,8 @@ namespace book_shop.Services.Implementations
                         number_of_page = bookDetail.number_of_page,
                         file_demo_url = bookDetail.file_demo_url,
                         description = bookDetail.description,
+                        rating = b.bookReviews.Where(_ => _.book_id == b.book_id).Average(br => br.rating),
+                        count_review = b.bookReviews.Count(br => br.book_id == b.book_id),
                     };
                 }));
 
@@ -323,7 +334,7 @@ namespace book_shop.Services.Implementations
                 var bookDtos = await Task.WhenAll(books.Select(async b =>
                 {
                     var author = await _authorRepository.GetByIdAsync(b.author_id);
-                    var bookDetail = await _bookDetailRepository.GetBookDetailsByBookIdAsync(b.author_id);
+                    var bookDetail = await _bookDetailRepository.GetBookDetailsByBookIdAsync(b.book_id);
                     return new BookResponseDto
                     {
                         book_id = b.book_id,
@@ -348,6 +359,8 @@ namespace book_shop.Services.Implementations
                         number_of_page = bookDetail.number_of_page,
                         file_demo_url = bookDetail.file_demo_url,
                         description = bookDetail.description,
+                        rating = b.bookReviews.Where(_ => _.book_id == b.book_id).Average(br => br.rating),
+                        count_review = b.bookReviews.Count(br => br.book_id == b.book_id),
                     };
                 }));
 
@@ -408,6 +421,8 @@ namespace book_shop.Services.Implementations
                         number_of_page = bookDetail.number_of_page,
                         file_demo_url = bookDetail.file_demo_url,
                         description = bookDetail.description,
+                        rating = b.bookReviews.Where(_ => _.book_id == b.book_id).Average(br => br.rating),
+                        count_review = b.bookReviews.Count(br => br.book_id == b.book_id),
                     };
                 }));
 
@@ -445,6 +460,14 @@ namespace book_shop.Services.Implementations
                     title = b.title,
                     author_id = b.author_id,
                     publisher = b.publisher,
+                    author = new Author
+                    {
+                        author_id = b.author_id,
+                        name = b.authors.FirstOrDefault()?.name ?? "Chưa có tác giả",
+                        bio = b.authors.FirstOrDefault()?.bio ?? "Chưa có thông tin",
+                        dob = b.authors.FirstOrDefault()?.dob ?? DateTime.MinValue,
+                        nationally = b.authors.FirstOrDefault()?.nationally ?? "Chưa có quốc tịch",
+                    },
                     price = b.price,
                     category_id = b.category_id,
                     image_url = b.image_url,
@@ -452,6 +475,12 @@ namespace book_shop.Services.Implementations
                     is_bn = b.is_bn,
                     quantity = b.quantity,
                     create_at = b.created_at,
+                    language = b.bookDetail.language,
+                    number_of_page = b.bookDetail.number_of_page,
+                    file_demo_url = b.bookDetail.file_demo_url,
+                    description = b.bookDetail.description,
+                    rating = b.bookReviews.Where(_ => _.book_id == b.book_id).Average(br => br.rating),
+                    count_review = b.bookReviews.Count(br => br.book_id == b.book_id),
                 }).ToList();
                 return new
                 {

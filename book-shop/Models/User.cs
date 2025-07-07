@@ -12,11 +12,13 @@ namespace book_shop.Models
         public DateTime created_at { get; set; }
         public string profile_image {  get; set; } = string.Empty;
         public int address_id { get; set; }
+        public int book_review_id { get; set; }
         public bool gender { get; set; }
         public DateTime dob { get; set; }
         public Account Account { get; set; }
         public Address Address { get; set; }
         public Cart Cart { get; set; }
         public ICollection<Order> Order { get; set; }
+        public ICollection<BookReview> BookReview { get; set; }
     }
 }

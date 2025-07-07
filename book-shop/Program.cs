@@ -59,6 +59,8 @@ builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
 builder.Services.AddScoped<IOrderDetailService, OrderDetailService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IBookReviewRepository, BookReviewRepository>();
+builder.Services.AddScoped<IBookReviewService, BookReviewService>();
 
 builder.Services.AddHttpClient("CloudinaryService", client =>
 {
