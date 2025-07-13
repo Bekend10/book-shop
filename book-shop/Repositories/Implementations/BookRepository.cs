@@ -119,6 +119,7 @@ namespace book_shop.Repositories.Implementations
                 book.quantity = entity.quantity;
                 book.publisher = entity.publisher;
                 book.price = entity.price;
+                book.price_origin = entity.price_origin;
                 book.category_id = entity.category_id;
                 book.image_url = entity.image_url;
                 _context.Books.Update(book);

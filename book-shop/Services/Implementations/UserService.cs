@@ -10,15 +10,49 @@ namespace book_shop.Services.Implementations
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IAddressRepository _addressRepository;
 
-        public UserService(IUserRepository userRepository)
+        public UserService(IUserRepository userRepository, IAddressRepository addressRepository)
         {
             _userRepository = userRepository;
+            _addressRepository = addressRepository;
         }
 
         public async Task<IEnumerable<User>> GetAllAsync() => await _userRepository.GetAllAsync();
 
-        public async Task<User?> GetByIdAsync(int id) => await _userRepository.GetByIdAsync(id);
+        public async Task<object> GetByIdAsync(int id)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null)
+            {
+                return new
+                {
+                    status = HttpStatusCode.NotFound,
+                    msg = "Không tìm thấy người dùng!"
+                };
+            }
+            var address = await _addressRepository.GetByIdAsync(user.address_id);
+            if (address != null)
+            {
+                user.Address = address;
+            }
+            return new
+            {
+                status = HttpStatusCode.OK,
+                msg = "Lấy thông tin người dùng thành công !",
+                data = new UserRespone
+                {
+                    user_id = user.user_id,
+                    email = user.email,
+                    first_name = user.first_name,
+                    last_name = user.last_name,
+                    phone_number = user.phone_number,
+                    profile_image = user.profile_image,
+                    full_name = $"{user.first_name} {user.last_name}",
+                    address = user.Address,
+                }
+            };
+        }
 
         public async Task<object> CreateAsync(CreateUserDto dto)
         {
@@ -29,6 +63,7 @@ namespace book_shop.Services.Implementations
                 email = dto.email,
                 dob = dto.dob,
                 gender = dto.gender,
+                phone_number = dto.phone_number,
                 profile_image = dto.profile_image,
                 created_at = DateTime.Now
             };
@@ -85,6 +120,12 @@ namespace book_shop.Services.Implementations
             if (dto.dob.HasValue && dto.dob.Value.Date != user.dob.Date)
             {
                 user.dob = (DateTime)dto.dob;
+                isUpdated = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.phone_number) && dto.phone_number != user.phone_number)
+            {
+                user.phone_number = dto.phone_number;
                 isUpdated = true;
             }
 

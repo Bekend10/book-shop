@@ -15,6 +15,7 @@ namespace book_shop.Models
         public int is_bn { get; set; }
         public int quantity { get; set; }
         public int price { get; set; }
+        public int price_origin { get; set; }
         public DateTime created_at { get; set; }
         public int category_id { get; set; }
         public Category category { get; set; } 
