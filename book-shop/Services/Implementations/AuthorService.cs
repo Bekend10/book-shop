@@ -10,11 +10,12 @@ namespace book_shop.Services.Implementations
     {
         private readonly IAuthorRepository _authorRepository;
         private readonly ILogger<AuthorService> _logger;
-
-        public AuthorService(IAuthorRepository authorRepository, ILogger<AuthorService> logger)
+        private readonly ICloudService _cloudService;
+        public AuthorService(IAuthorRepository authorRepository, ILogger<AuthorService> logger, ICloudService cloudService)
         {
             _authorRepository = authorRepository;
             _logger = logger;
+            _cloudService = cloudService;
         }
 
         public async Task<object> GetAuthorByNationally(string nationally)
@@ -98,9 +99,20 @@ namespace book_shop.Services.Implementations
                     name = author.name,
                     nationally = author.nationally,
                     bio = author.bio,
-                    dob = author.dob
+                    dob = author.dob,
                 };
                 await _authorRepository.AddAsync(newAuthor);
+                if (author.image_url != null && author.image_url.Length > 0)
+                {
+                    var imageUrl = await _cloudService.UploadImageAsync(author.image_url);
+                    newAuthor.image_url = imageUrl;
+                    await _authorRepository.UpdateAsync(newAuthor);
+                }
+                else
+                {
+                    newAuthor.image_url = "https://res.cloudinary.com/ddcomkqut/image/upload/v1751708914/jhdvzedy1hueackj5lfy.jpg";
+                    await _authorRepository.UpdateAsync(newAuthor);
+                }
                 _logger.LogInformation("Thêm tác giả {author} thành công", author.name);
                 return new
                 {
@@ -134,10 +146,24 @@ namespace book_shop.Services.Implementations
                     };
                 }
 
-                if (author.name.Length > 0) isExistingAuthor.name = author.name;
+                if (!string.IsNullOrEmpty(author.name))
+                {
+                    isExistingAuthor.name = author.name;
+                }
                 if (author.dob != null) isExistingAuthor.dob = author.dob.Value;
-                if (author.nationally.Length > 0) isExistingAuthor.nationally = author.nationally;
-                if (author.bio.Length > 0) isExistingAuthor.bio = author.bio;
+                if (!string.IsNullOrEmpty(author.nationally))
+                {
+                    isExistingAuthor.nationally = author.nationally;
+                }
+                if (!string.IsNullOrEmpty(author.bio))
+                {
+                    isExistingAuthor.bio = author.bio;
+                }
+                if (author.image_url != null && author.image_url.Length > 0)
+                {
+                    var imageUrl = await _cloudService.UploadImageAsync(author.image_url);
+                    isExistingAuthor.image_url = imageUrl;
+                }
 
                 await _authorRepository.UpdateAsync(isExistingAuthor);
                 _logger.LogInformation("Cập nhật tác giả {author} thành công", author.name);
