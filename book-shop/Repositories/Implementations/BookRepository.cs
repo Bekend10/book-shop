@@ -30,12 +30,25 @@ namespace book_shop.Repositories.Implementations
 
         public async Task<IEnumerable<Book>> GetAllAsync()
         {
-            return await _context.Books.ToListAsync(); 
+            return await _context.Books.Include(b => b.authors)
+                .Include(b => b.category)
+                .Include(b => b.bookReviews)
+                .Include(b => b.bookDetail)
+                .Include(b => b.orderDetail)
+                .Include(b => b.authors)
+                .Include(b => b.cartDetails)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<Book>> GetBooksByAuthorIdAsync(int authorId)
         {
             var books = await _context.Books
+                .Include(b => b.category)
+                .Include(b => b.bookReviews)
+                .Include(b => b.bookDetail)
+                .Include(b => b.orderDetail)
+                .Include(b => b.authors)
+                .Include(b => b.cartDetails)
                 .Where(c => c.author_id == authorId)
                 .ToListAsync();
             return books;
@@ -44,6 +57,12 @@ namespace book_shop.Repositories.Implementations
         public async Task<IEnumerable<Book>> GetBooksByCategoryIdAsync(int categoryId)
         {
             var books = await _context.Books
+                .Include(b => b.category)
+                .Include(b => b.bookReviews)
+                .Include(b => b.bookDetail)
+                .Include(b => b.orderDetail)
+                .Include(b => b.authors)
+                .Include(b => b.cartDetails)
                 .Where(c => c.category_id == categoryId)
                 .ToListAsync();
             return books;
@@ -52,6 +71,12 @@ namespace book_shop.Repositories.Implementations
         public async Task<IEnumerable<Book>> GetBooksByPublisherAsync(string publisher)
         {
             var books = await _context.Books
+                .Include(b => b.category)
+                .Include(b => b.bookReviews)
+                .Include(b => b.bookDetail)
+                .Include(b => b.orderDetail)
+                .Include(b => b.authors)
+                .Include(b => b.cartDetails)
                 .Where(c => c.publisher == publisher)
                 .ToListAsync();
             return books;
@@ -60,6 +85,12 @@ namespace book_shop.Repositories.Implementations
         public async Task<IEnumerable<Book>> GetBooksByTitleAsync(string title)
         {
             var books = await _context.Books
+                .Include(b => b.category)
+                .Include(b => b.bookReviews)
+                .Include(b => b.bookDetail)
+                .Include(b => b.orderDetail)
+                .Include(b => b.authors)
+                .Include(b => b.cartDetails)
                 .Where(c => c.title.Contains(title))
                 .ToListAsync();
             return books;
@@ -67,19 +98,14 @@ namespace book_shop.Repositories.Implementations
 
         public async Task<Book> GetByIdAsync(int id)
         {
-            var book = await _context.Books               
-                .Select(_ => new Book
-                {
-                    book_id = _.book_id,
-                    title = _.title,
-                    author_id = _.author_id,
-                    publisher = _.publisher,
-                    price = _.price,
-                    category_id = _.category_id,
-                    image_url = _.image_url,
-                    quantity = _.quantity,
-                    is_bn = _.is_bn,
-                }).Where(_ => _.book_id == id).FirstOrDefaultAsync();
+            var book = await _context.Books
+                .Include(b => b.cartDetails)
+                .Include(b => b.authors)
+                .Include(b => b.category)
+                .Include(b => b.bookReviews)
+                .Include(b => b.bookDetail)
+                .Include(b => b.orderDetail)
+                .FirstOrDefaultAsync(b => b.book_id == id);
             return book;
         }
 
@@ -93,6 +119,7 @@ namespace book_shop.Repositories.Implementations
                 book.quantity = entity.quantity;
                 book.publisher = entity.publisher;
                 book.price = entity.price;
+                book.price_origin = entity.price_origin;
                 book.category_id = entity.category_id;
                 book.image_url = entity.image_url;
                 _context.Books.Update(book);

@@ -11,7 +11,7 @@ namespace book_shop.Repositories.Implementations
         private readonly ApplicationDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public UserRepository(ApplicationDbContext context , IHttpContextAccessor httpContextAccessor)
+        public UserRepository(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
@@ -41,7 +41,8 @@ namespace book_shop.Repositories.Implementations
 
         public async Task<User> GetByIdAsync(int id)
         {
-            return await _context.Users.FindAsync(id);
+            return await _context.Users
+                .FirstAsync(x => x.user_id == id);
         }
 
         public async Task<int> GetCurrentUserIdAsync()
@@ -64,6 +65,9 @@ namespace book_shop.Repositories.Implementations
 
         public async Task UpdateAsync(User entity)
         {
+            var existingUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.user_id == entity.user_id);
+            if (existingUser == null)
+                throw new KeyNotFoundException("User not found");
             _context.Users.Update(entity);
             await _context.SaveChangesAsync();
         }

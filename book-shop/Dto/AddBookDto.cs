@@ -10,6 +10,7 @@
         public DateTime publisher_year { get; set; }
         public int is_bn { get; set; }
         public int quantity { get; set; }
+        public int price_origin { get; set; }
         public DateTime create_at { get; set; }
         public string description { get; set; } = string.Empty;
         public IFormFile image { get; set; } = null!;

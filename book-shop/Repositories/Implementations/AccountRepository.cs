@@ -36,6 +36,7 @@ namespace book_shop.Repositories.Implementations
                 {
                     account_id = _.account_id,
                     email = _.email,
+                    password = _.password,
                     refresh_token = _.refresh_token,
                     refresh_token_ext = _.refresh_token_ext,
                     user_id = _.user_id,
@@ -51,6 +52,7 @@ namespace book_shop.Repositories.Implementations
                 {
                     account_id = _.account_id,
                     email = _.email,
+                    password = _.password,
                     refresh_token = _.refresh_token,
                     refresh_token_ext = _.refresh_token_ext,
                     user_id = _.user_id,
