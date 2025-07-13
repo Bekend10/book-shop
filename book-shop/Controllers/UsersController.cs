@@ -27,8 +27,8 @@ namespace book_shop.Controllers
             return Ok(users);
         }
 
-        [Authorize(Roles = "admin")]
-        [HttpGet("get-user-by-id")]
+        [Authorize]
+        [HttpGet("get-user-by-id")] 
         public async Task<IActionResult> GetById(int id)
         {
             var user = await _userService.GetByIdAsync(id);

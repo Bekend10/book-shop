@@ -8,6 +8,7 @@ namespace book_shop.Models
         public int detail_id { get; set; }
         public int book_id { get; set; }
         public int quantity { get; set; }
+        public int price_origin { get; set; }
         public int is_bn { get; set; }
         public string description { get; set; } = string.Empty;
         public string image_url { get; set; } = string.Empty;

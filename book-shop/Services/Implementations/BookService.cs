@@ -51,9 +51,10 @@ namespace book_shop.Services.Implementations
                     title = book.title,
                     author_id = book.author_id,
                     category_id = book.category_id,
-                    publisher = book.publisher,             
+                    publisher = book.publisher,
                     publisher_year = book.publisher_year,
                     price = book.price,
+                    price_origin = book.price_origin,
                     quantity = book.quantity,
                     created_at = DateTime.Now,
                     is_bn = book.is_bn,
@@ -134,14 +135,20 @@ namespace book_shop.Services.Implementations
                 _logger.LogInformation("Lấy danh sách sách thành công !");
                 var books = await _bookRepository.GetAllAsync();
 
-                var bookDtos = await Task.WhenAll(books.Select(async b =>
+                var bookDtos = new List<BookResponseDto>();
+
+                foreach (var b in books)
                 {
                     var author = await _authorRepository.GetByIdAsync(b.author_id);
-                    return new BookResponseDto
+                    var category = await _categoryRepository.GetByIdAsync(b.category_id);
+
+                    var ratings = b.bookReviews.Where(r => r.book_id == b.book_id).ToList();
+
+                    var dto = new BookResponseDto
                     {
                         book_id = b.book_id,
                         title = b.title,
-                        category = await _categoryRepository.GetByIdAsync(b.category_id),
+                        category = category,
                         author = new Author
                         {
                             author_id = author.author_id,
@@ -152,6 +159,7 @@ namespace book_shop.Services.Implementations
                         },
                         publisher = b.publisher,
                         price = b.price,
+                        price_origin = b.price_origin,
                         category_id = b.category_id,
                         image_url = b.image_url,
                         publisher_year = b.publisher_year,
@@ -159,13 +167,15 @@ namespace book_shop.Services.Implementations
                         quantity = b.quantity,
                         create_at = b.created_at,
                         number_of_page = b.bookDetail.number_of_page,
-                        language = b.bookDetail.language,
-                        file_demo_url = b.bookDetail.file_demo_url,
-                        description = b.bookDetail.description,
-                        rating = b.bookReviews.Where(_ => _.book_id == b.book_id).Average(br => br.rating),
-                        count_review = b.bookReviews.Count(br => br.book_id == b.book_id),
+                        language = b.bookDetail?.language,
+                        file_demo_url = b.bookDetail?.file_demo_url,
+                        description = b.bookDetail?.description,
+                        rating = ratings.Any() ? ratings.Average(r => r.rating) : 0,
+                        count_review = ratings.Count
                     };
-                }));
+
+                    bookDtos.Add(dto);
+                }
 
                 return new
                 {
@@ -185,6 +195,7 @@ namespace book_shop.Services.Implementations
             }
         }
 
+
         public async Task<object> GetBookByIdAsync(int id)
         {
             try
@@ -195,35 +206,43 @@ namespace book_shop.Services.Implementations
                     _logger.LogError("Không tìm thấy sách có id {id} !", id);
                     return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy sách !" };
                 }
+
                 var bookDetail = await _bookDetailRepository.GetBookDetailsByBookIdAsync(id);
                 var author = await _authorRepository.GetByIdAsync(book.author_id);
+                var category = await _categoryRepository.GetByIdAsync(book.category_id);
+
+                var ratings = book.bookReviews?.Where(r => r.book_id == book.book_id).ToList() ?? new List<BookReview>();
+                double averageRating = ratings.Any() ? ratings.Average(r => r.rating) : 0;
+                int reviewCount = ratings.Count;
+
                 var bookDto = new BookResponseDto
                 {
                     book_id = book.book_id,
                     title = book.title,
                     author = new Author
                     {
-                        author_id = author.author_id,
-                        name = author.name,
-                        bio = author.bio,
+                        author_id = author?.author_id ?? 0,
+                        name = author?.name,
+                        bio = author?.bio,
                         dob = author.dob,
-                        nationally = author.nationally,
+                        nationally = author?.nationally
                     },
-                    category = await _categoryRepository.GetByIdAsync(book.category_id),
-                    rating = book.bookReviews.Where(_ => _.book_id == book.book_id).Average(br => br.rating),
-                    count_review = book.bookReviews.Count(br => br.book_id == book.book_id),
-                    publisher = book.publisher,
-                    price = book.price,
+                    category = category,
                     category_id = book.category_id,
-                    image_url = book.image_url,
+                    publisher = book.publisher,
                     publisher_year = book.publisher_year,
-                    is_bn = book.is_bn,
+                    price = book.price,
+                    price_origin = book.price_origin,
                     quantity = book.quantity,
-                    create_at = book.created_at,
-                    language = bookDetail.language,
-                    number_of_page = book.bookDetail.number_of_page,
-                    file_demo_url = book.bookDetail.file_demo_url,
-                    description = book.bookDetail.description,
+                    image_url = book.image_url,
+                    description = bookDetail?.description,
+                    number_of_page = bookDetail?.number_of_page ?? 0,
+                    language = bookDetail?.language,
+                    file_demo_url = bookDetail?.file_demo_url,
+                    rating = averageRating,
+                    count_review = reviewCount,
+                    is_bn = book.is_bn,
+                    create_at = book.created_at
                 };
 
                 _logger.LogInformation("Lấy sách {id} thành công !", id);
@@ -250,7 +269,7 @@ namespace book_shop.Services.Implementations
             try
             {
                 var authors = await _authorRepository.GetByIdAsync(authorId);
-                if(authors == null)
+                if (authors == null)
                 {
                     _logger.LogError("Không tìm thấy tác giả có id {authorId} !", authorId);
                     return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy tác giả !" };
@@ -279,6 +298,7 @@ namespace book_shop.Services.Implementations
                         },
                         publisher = b.publisher,
                         price = b.price,
+                        price_origin = b.price_origin,
                         category_id = b.category_id,
                         image_url = b.image_url,
                         publisher_year = b.publisher_year,
@@ -349,6 +369,7 @@ namespace book_shop.Services.Implementations
                         },
                         publisher = b.publisher,
                         price = b.price,
+                        price_origin = b.price_origin,
                         category_id = b.category_id,
                         image_url = b.image_url,
                         publisher_year = b.publisher_year,
@@ -411,6 +432,7 @@ namespace book_shop.Services.Implementations
                         },
                         publisher = b.publisher,
                         price = b.price,
+                        price_origin = b.price_origin,
                         category_id = b.category_id,
                         image_url = b.image_url,
                         publisher_year = b.publisher_year,
@@ -469,6 +491,7 @@ namespace book_shop.Services.Implementations
                         nationally = b.authors.FirstOrDefault()?.nationally ?? "Chưa có quốc tịch",
                     },
                     price = b.price,
+                    price_origin = b.price_origin,
                     category_id = b.category_id,
                     image_url = b.image_url,
                     publisher_year = b.publisher_year,
@@ -518,7 +541,7 @@ namespace book_shop.Services.Implementations
                     return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy chi tiết sách !" };
                 }
 
-                if(book.category_id.HasValue && book.category_id != existingBook.category_id)
+                if (book.category_id.HasValue && book.category_id != existingBook.category_id)
                 {
                     var existingCategory = await _categoryRepository.GetByIdAsync(book.category_id.Value);
                     if (existingCategory == null)
@@ -545,8 +568,12 @@ namespace book_shop.Services.Implementations
                 if (book.price.HasValue) existingBook.price = book.price.Value;
                 if (book.category_id.HasValue) existingBook.category_id = book.category_id.Value;
                 existingBook.publisher_year = book.publisher_year ?? existingBook.publisher_year;
-                if (book.quantity.HasValue) existingBook.quantity = book.quantity.Value;
-                if (book.is_bn.HasValue) existingBook.is_bn = book.is_bn.Value;
+                if (book.quantity.HasValue)
+                {
+                    existingBook.quantity = book.quantity.Value;
+                    book.is_bn = book.quantity > 0 ? 1 : 0;
+                }
+                if (book.price_origin.HasValue) existingBook.price_origin = book.price_origin.Value;
 
                 if (book.image != null)
                 {

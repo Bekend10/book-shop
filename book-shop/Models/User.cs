@@ -9,6 +9,7 @@ namespace book_shop.Models
         public string first_name { get; set; } = string.Empty;
         public string last_name { get; set; } = string.Empty;
         public string email { get; set; } = string.Empty;
+        public string phone_number { get; set; }
         public DateTime created_at { get; set; }
         public string profile_image {  get; set; } = string.Empty;
         public int address_id { get; set; }

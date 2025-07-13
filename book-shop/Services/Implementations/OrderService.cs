@@ -111,6 +111,7 @@ namespace book_shop.Services.Implementations
 
                 newOrder.total_amount = newOrderDetail.quantity * newOrderDetail.unit_price;
                 isExistingBook.quantity -= newOrderDetail.quantity;
+                isExistingBook.is_bn = isExistingBook.quantity <= 0 ? 0 : 1; 
 
                 await _book.UpdateAsync(isExistingBook);
                 await _orderDetailRepository.AddAsync(newOrderDetail);

@@ -21,6 +21,8 @@ namespace book_shop.Dto
         public double rating { get; set; }
         public int count_review { get; set; }
         public int price { get; set; }
+        public int price_origin { get; set; }
+
         public BookDetail BookDetail { get; set; } = null!;
         public Author author { get; set; } = null!;
         public Category category { get; set; } = null!;
@@ -36,6 +38,7 @@ namespace book_shop.Dto
         public int? author_id { get; set; }
         public string? publisher { get; set; }
         public int? price { get; set; }
+        public int? price_origin { get; set; }
         public int? category_id { get; set; }
         public DateTime? publisher_year { get; set; }
         public int? quantity { get; set; }

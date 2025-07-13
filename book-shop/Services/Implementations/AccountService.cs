@@ -13,13 +13,14 @@ namespace book_shop.Services.Implementations
     public class AccountService : IAccountService
     {
         private readonly IAccountRepository _accountRepository;
+        private readonly IAddressRepository _addressRepository;
         private readonly IUserRepository _userRepository;
         private readonly IJWTService _jwtService;
         private readonly ILogger<AccountService> _logger;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
 
-        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository, IConfiguration configuration)
+        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository, IConfiguration configuration, IAddressRepository addressRepository)
         {
             _accountRepository = accountRepository;
             _jwtService = jwtService;
@@ -27,6 +28,7 @@ namespace book_shop.Services.Implementations
             _emailService = emailService;
             _userRepository = userRepository;
             _configuration = configuration;
+            _addressRepository = addressRepository;
         }
 
         public async Task<object> RegisterAsync(RegisterDto registerDto)
@@ -47,6 +49,7 @@ namespace book_shop.Services.Implementations
                     last_name = registerDto.last_name,
                     email = registerDto.email,
                     created_at = DateTime.Now,
+                    phone_number = "0987654321",
                     profile_image = img,
                     address_id = 5,
                 };
@@ -107,7 +110,7 @@ namespace book_shop.Services.Implementations
                 await _accountRepository.UpdateAsync(account);
 
                 var user = await _userRepository.GetByIdAsync(account.user_id);
-
+                var address = await _addressRepository.GetByIdAsync(user.address_id);
                 return new
                 {
                     status = HttpStatusCode.OK,
@@ -117,11 +120,14 @@ namespace book_shop.Services.Implementations
                     user = new UserRespone
                     {
                         user_id = user.user_id,
+                        account_id = account.account_id,
                         email = account.email,
                         first_name = user.first_name,
                         last_name = user.last_name,
                         full_name = user.first_name + " " + user.last_name,
                         profile_image = user.profile_image,
+                        phone_number = user.phone_number,
+                        address = address,
                         role = account.role_id == 1 ? "user" : "admin",
                     }
                 };
