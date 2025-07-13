@@ -10,13 +10,15 @@ namespace book_shop.Services.Implementations
     public class CategoryService : ICategoryService
     {
         private readonly ICategoryRepository _categoryRepository;
+        private readonly IBookRepository _bookRepository;
         private readonly ILogger<CategoryService> _logger;
         private readonly UserHelper _userHelper;
-        public CategoryService(ICategoryRepository categoryRepository, ILogger<CategoryService> logger , UserHelper userHelper)
+        public CategoryService(ICategoryRepository categoryRepository, ILogger<CategoryService> logger, UserHelper userHelper, IBookRepository bookRepository)
         {
             _categoryRepository = categoryRepository;
             _logger = logger;
             _userHelper = userHelper;
+            _bookRepository = bookRepository;
         }
         public async Task<object> AddCategoryAsync(CategoryDto category)
         {
@@ -72,8 +74,22 @@ namespace book_shop.Services.Implementations
                 _logger.LogInformation("Không tìm thấy danh mục nào !");
                 return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy danh mục nào !" };
             }
+            var categoryRespone = result.Select(c => new CategoryDto
+            {
+                category_id = c.category_id,
+                name = c.name,
+                description = c.description,
+                created_at = c.created_at,
+                created_by = c.created_by
+            }).ToList();
+            foreach (var item in categoryRespone)
+            {
+                var bookList = await _bookRepository.GetBooksByCategoryIdAsync(item.category_id);
+                item.book_count = bookList.Count();
+            }
+
             _logger.LogInformation("Lấy danh sách danh mục thành công !");
-            return new {status = HttpStatusCode.OK, msg = "Lấy danh sách danh mục thành công !" ,data = result };
+            return new {status = HttpStatusCode.OK, msg = "Lấy danh sách danh mục thành công !" ,data = categoryRespone };
         }
 
 
@@ -85,8 +101,10 @@ namespace book_shop.Services.Implementations
                 _logger.LogInformation("Không tìm thấy danh mục với id {id}", id);
                 return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy danh mục !" };
             }
+            var bookList = await _bookRepository.GetBooksByCategoryIdAsync(id);
+            var bookCount = bookList.Count();
             _logger.LogInformation("Lấy danh mục {category} thành công !", cate.name);
-            return new { status = HttpStatusCode.OK, msg = "Lấy danh mục thành công !", data = cate };
+            return new { status = HttpStatusCode.OK, msg = "Lấy danh mục thành công !", data = cate , book_count = bookCount};
         }
 
         public async Task<object> UpdateCategoryAsync(int id, CategoryDto category)

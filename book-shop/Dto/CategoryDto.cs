@@ -7,5 +7,6 @@
         public string description { get; set; } = string.Empty;
         public DateTime created_at { get; set; } = DateTime.Now;
         public int created_by { get; set; }
+        public int book_count { get; set; }
     }
 }
