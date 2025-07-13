@@ -10,6 +10,7 @@ namespace book_shop.Models
         public string bio { get; set; } = string.Empty;
         public DateTime dob { get; set; }
         public string nationally { get; set; } = string.Empty;
+        public string image_url { get; set; } = string.Empty;
         public ICollection<Book> books { get; set; }
     }
 }
