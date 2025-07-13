@@ -7,6 +7,7 @@
         public string bio { get; set; } = string.Empty;
         public DateTime dob { get; set; }
         public string nationally { get; set; } = string.Empty;
+        public IFormFile image_url { get; set; }
     }
 
     public class UpdateAuthorDto
@@ -15,5 +16,6 @@
         public string? bio { get; set; } = string.Empty;
         public DateTime? dob { get; set; }
         public string? nationally { get; set; } = string.Empty;
+        public IFormFile? image_url { get; set; }
     }
 }

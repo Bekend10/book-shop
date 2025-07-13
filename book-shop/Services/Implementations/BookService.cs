@@ -156,6 +156,7 @@ namespace book_shop.Services.Implementations
                             bio = author.bio,
                             dob = author.dob,
                             nationally = author.nationally,
+                            image_url = author.image_url
                         },
                         publisher = b.publisher,
                         price = b.price,
@@ -225,7 +226,8 @@ namespace book_shop.Services.Implementations
                         name = author?.name,
                         bio = author?.bio,
                         dob = author.dob,
-                        nationally = author?.nationally
+                        nationally = author?.nationally,
+                        image_url = author?.image_url
                     },
                     category = category,
                     category_id = book.category_id,
@@ -295,6 +297,7 @@ namespace book_shop.Services.Implementations
                             bio = author.bio,
                             dob = author.dob,
                             nationally = author.nationally,
+                            image_url = author.image_url
                         },
                         publisher = b.publisher,
                         price = b.price,
@@ -366,6 +369,7 @@ namespace book_shop.Services.Implementations
                             bio = author.bio,
                             dob = author.dob,
                             nationally = author.nationally,
+                            image_url = author.image_url
                         },
                         publisher = b.publisher,
                         price = b.price,
@@ -429,6 +433,7 @@ namespace book_shop.Services.Implementations
                             bio = author.bio,
                             dob = author.dob,
                             nationally = author.nationally,
+                            image_url = author.image_url
                         },
                         publisher = b.publisher,
                         price = b.price,
@@ -489,6 +494,7 @@ namespace book_shop.Services.Implementations
                         bio = b.authors.FirstOrDefault()?.bio ?? "Chưa có thông tin",
                         dob = b.authors.FirstOrDefault()?.dob ?? DateTime.MinValue,
                         nationally = b.authors.FirstOrDefault()?.nationally ?? "Chưa có quốc tịch",
+                        image_url = b.authors.FirstOrDefault()?.image_url ?? "Chưa có ảnh"
                     },
                     price = b.price,
                     price_origin = b.price_origin,

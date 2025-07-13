@@ -41,7 +41,7 @@ namespace book_shop.Controllers
 
         [HttpPost("create-author")]
         [Authorize(Roles ="admin")]
-        public async Task<IActionResult> CreateAuthor([FromBody] AuthorDto author)
+        public async Task<IActionResult> CreateAuthor([FromForm] AuthorDto author)
         {
             var createdAuthor = await _authorService.CreateAuthor(author);
             return Ok(createdAuthor);
@@ -49,7 +49,7 @@ namespace book_shop.Controllers
 
         [HttpPut("update-author")]
         [Authorize(Roles = "admin")]
-        public async Task<IActionResult> UpdateAuthor(int id, [FromBody] UpdateAuthorDto author)
+        public async Task<IActionResult> UpdateAuthor(int id, [FromForm] UpdateAuthorDto author)
         {
             var updatedAuthor = await _authorService.UpdateAuthor(id, author);
             return Ok(updatedAuthor);
