@@ -10,6 +10,7 @@ namespace book_shop.Dto
         public DateTime PaymentDate { get; set; }
         public int Amount { get; set; }
         public PaymentEnumStatus PaymentStatus { get; set; }
+        public UserDto User { get; set; }
     }
 
     public class CreatePaymentDto

@@ -99,12 +99,6 @@ namespace book_shop.Repositories.Implementations
         public async Task<Book> GetByIdAsync(int id)
         {
             var book = await _context.Books
-                .Include(b => b.cartDetails)
-                .Include(b => b.authors)
-                .Include(b => b.category)
-                .Include(b => b.bookReviews)
-                .Include(b => b.bookDetail)
-                .Include(b => b.orderDetail)
                 .FirstOrDefaultAsync(b => b.book_id == id);
             return book;
         }
