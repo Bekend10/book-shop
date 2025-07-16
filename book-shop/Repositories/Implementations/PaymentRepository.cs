@@ -1,4 +1,5 @@
 ﻿using book_shop.Data;
+using book_shop.Dto;
 using book_shop.Models;
 using book_shop.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -30,7 +31,35 @@ namespace book_shop.Repositories.Implementations
 
         public async Task<IEnumerable<Payment>> GetAllAsync()
         {
-            return await _context.Payments.ToListAsync();
+            return await _context.Payments
+                .Include(x => x.order)
+                .ThenInclude(x => x.User)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<PaymentDto>> GetAllPaymentsAsync()
+        {
+            var payments = await _context.Payments
+                .Include(p => p.order)
+                .ThenInclude(o => o.User)
+                .Select(p => new PaymentDto
+                {
+                    PaymentId = p.payment_id,
+                    OrderId = p.order_id,
+                    MethodId = p.method_id,
+                    Amount = p.amount,
+                    PaymentStatus = p.payment_status,
+                    PaymentDate = p.order.order_date,
+                    User = new UserDto
+                    {
+                        user_id = p.order.User.user_id,
+                        first_name = p.order.User.first_name,
+                        email = p.order.User.email,
+                        last_name = p.order.User.last_name
+                    }
+                })
+                .ToListAsync();
+            return payments;
         }
 
         public async Task<Payment> GetByIdAsync(int id)

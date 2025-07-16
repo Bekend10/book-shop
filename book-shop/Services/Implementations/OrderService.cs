@@ -11,14 +11,18 @@ namespace book_shop.Services.Implementations
     public class OrderService : IOrderService
     {
         private readonly IOrderRepository _orderRepository;
+        private readonly IAddressRepository _addressRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IOrderDetailRepository _orderDetailRepository;
+        private readonly IBookDetailRepository _bookDetailRepository;
         private readonly ICartRepository _cartRepository;
+        private readonly IAuthorRepository _authorRepository;
         private readonly ICartDetailRepository _cartDetailRepository;
         private readonly IBookRepository _book;
         private readonly UserHelper _userHelper;
         private readonly ILogger<OrderService> _logger;
 
-        public OrderService(ILogger<OrderService> logger, IOrderRepository orderRepository, IOrderDetailRepository orderDetailRepository, IBookRepository book, UserHelper userHelper, ICartRepository cartRepository, ICartDetailRepository cartDetailRepository)
+        public OrderService(ILogger<OrderService> logger, IOrderRepository orderRepository, IOrderDetailRepository orderDetailRepository, IBookRepository book, UserHelper userHelper, ICartRepository cartRepository, ICartDetailRepository cartDetailRepository, IUserRepository userRepository, IAddressRepository addressRepository = null, IBookDetailRepository bookDetailRepository = null, IAuthorRepository authorRepository = null)
         {
             _logger = logger;
             _orderRepository = orderRepository;
@@ -27,6 +31,10 @@ namespace book_shop.Services.Implementations
             _userHelper = userHelper;
             _cartRepository = cartRepository;
             _cartDetailRepository = cartDetailRepository;
+            _userRepository = userRepository;
+            _addressRepository = addressRepository;
+            _bookDetailRepository = bookDetailRepository;
+            _authorRepository = authorRepository;
         }
 
 
@@ -293,6 +301,46 @@ namespace book_shop.Services.Implementations
         public async Task<object> GetAllOrdersAsync()
         {
             var orders = await _orderRepository.GetAllAsync();
+            var orderResult = new List<OrderRespone>();
+
+            foreach (var order in orders)
+            {
+                var user = await _userRepository.GetByIdAsync(order.user_id);
+                if (user == null)
+                {
+                    _logger.LogWarning("User with ID {UserId} not found.", order.user_id);
+                    continue;
+                }
+                var orderDetail = (OrderDetail)await _orderDetailRepository.GetOrderDetailsByOrderIdAsync(order.order_id);
+                var bookDetail = await _bookDetailRepository.GetBookDetailsByBookIdAsync(orderDetail?.book_id ?? 0);
+                var book = await _book.GetByIdAsync(orderDetail?.book_id ?? 0);
+                var author = await _authorRepository.GetByIdAsync(book?.author_id ?? 0);
+                orderResult.Add(new OrderRespone
+                {
+                    order_id = order.order_id,
+                    user = user,
+                    orderDetail = orderDetail,
+                    address = _addressRepository != null ? await _addressRepository.GetByIdAsync(user.address_id) : null,
+                    order_date = order.order_date,
+                    status = order.status,
+                    total_amount = order.total_amount,
+                    items = new BookResponseDto
+                    {
+                        book_id = orderDetail != null ? orderDetail?.book_id ?? 0 : 0,
+                        quantity = orderDetail != null ? orderDetail?.quantity ?? 0 : 0,
+                        image_url = bookDetail != null ? bookDetail?.book.image_url ?? null : null,
+                        title = bookDetail != null ? bookDetail?.book.title : null,
+                        price = bookDetail != null ? bookDetail.price : 0,
+                        author = author != null ? new Author
+                        {
+                            author_id = author.author_id,
+                            name = author.name,
+                            bio = author.bio,
+                        } : null
+                    }
+                });;
+            }
+
             if (orders == null || !orders.Any())
             {
                 _logger.LogInformation("Không có đơn hàng nào được tìm thấy.");
@@ -306,7 +354,7 @@ namespace book_shop.Services.Implementations
             return new
             {
                 status = HttpStatusCode.OK,
-                data = orders
+                data = orderResult
             };
         }
 

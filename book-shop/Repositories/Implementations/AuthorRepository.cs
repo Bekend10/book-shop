@@ -45,6 +45,15 @@ namespace book_shop.Repositories.Implementations
                 .FirstOrDefaultAsync(a => a.nationally == nationally);
         }
 
+        public async Task<Author> GetAuthorsByBookId(int bookId)
+        {
+            return await _context.Authors
+                .Include(a => a.books)
+                .Where(a => a.books.Any(b => b.book_id == bookId))
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<Author> GetByIdAsync(int id)
         {
             return await _context.Authors
