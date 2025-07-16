@@ -12,12 +12,13 @@ namespace book_shop.Services.Implementations
     {
         private readonly IPaymentRepository _paymentRepository;
         private readonly IOrderRepository _orderRepository;
+        private readonly IUserRepository _userRepository;
         private readonly ILogger<PaymentService> _logger;
         private readonly IVnpayService _vnpayService;
         private readonly UserHelper _userHelper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public PaymentService(IPaymentRepository paymentRepository, ILogger<PaymentService> logger, IOrderRepository orderRepository, UserHelper userHelper, IVnpayService vnpayService, IHttpContextAccessor httpContextAccessor)
+        public PaymentService(IPaymentRepository paymentRepository, ILogger<PaymentService> logger, IOrderRepository orderRepository, UserHelper userHelper, IVnpayService vnpayService, IHttpContextAccessor httpContextAccessor, IUserRepository userRepository)
         {
             _paymentRepository = paymentRepository;
             _logger = logger;
@@ -25,6 +26,7 @@ namespace book_shop.Services.Implementations
             _userHelper = userHelper;
             _vnpayService = vnpayService;
             _httpContextAccessor = httpContextAccessor;
+            _userRepository = userRepository;
         }
 
         public async Task<object> CreatePayment(CreatePaymentDto model)
@@ -58,7 +60,7 @@ namespace book_shop.Services.Implementations
                 {
                     case 1: //COD
                         newPayment.method_id = 0;
-                        newPayment.payment_status = Enums.PaymentEnumStatus.Completed;
+                        newPayment.payment_status = PaymentEnumStatus.Completed;
                         isOrderExisting.status = OrderEnumStatus.OrderStatus.Delivered;
                         await _paymentRepository.AddAsync(newPayment);
                         await _orderRepository.UpdateAsync(isOrderExisting);
@@ -119,8 +121,8 @@ namespace book_shop.Services.Implementations
 
         public async Task<object> GetAllPayments()
         {
-            var payments = await _paymentRepository.GetAllAsync();
-            if(payments == null || !payments.Any())
+            var payments = await _paymentRepository.GetAllPaymentsAsync();
+            if (payments == null || !payments.Any())
             {
                 _logger.LogInformation("Không có thanh toán nào được tìm thấy.");
                 return new { status = HttpStatusCode.NotFound, message = "Không có thanh toán nào được tìm thấy." };

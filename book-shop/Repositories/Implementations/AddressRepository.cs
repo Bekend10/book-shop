@@ -28,6 +28,13 @@ namespace book_shop.Repositories.Implementations
             }
         }
 
+        public async Task<Address> GetAddressByUserId(int id)
+        {
+            var address = await _context.Address
+                .FirstOrDefaultAsync(a => a.User.user_id == id);
+            return address;
+        }
+
         public async Task<IEnumerable<Address>> GetAllAsync()
         {
             return await _context.Address.ToListAsync();
