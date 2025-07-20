@@ -93,7 +93,7 @@ namespace book_shop.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles ="admin")]
+        [Authorize(Roles = "admin")]
         [Route("get-accounts")]
         public async Task<IActionResult> GetAccounts()
         {
@@ -102,17 +102,17 @@ namespace book_shop.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles ="admin")]
+        [Authorize(Roles = "admin")]
         [Route("get-detail")]
         public async Task<IActionResult> GetAccountById(int id)
         {
             var result = await _accountService.GetAccountById(id);
-            if(result == null) { return NotFound(); }
+            if (result == null) { return NotFound(); }
             return Ok(result);
         }
 
         [HttpDelete]
-        [Authorize(Roles ="admin")]
+        [Authorize(Roles = "admin")]
         [Route("delete-account")]
         public async Task<IActionResult> DeleteAccount(int id)
         {
@@ -130,10 +130,19 @@ namespace book_shop.Controllers
 
         [HttpPut]
         [Route("lock-account")]
-        [Authorize(Roles ="admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> LockAccount(int id)
         {
             var result = await _accountService.LockAsync(id);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("create-account-by-admin")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> CreateNewAccountByAdmin([FromBody] CreateUserByAdmin model)
+        {
+            var result = await _accountService.CreateNewAccountByAdmin(model);
             return Ok(result);
         }
     }
