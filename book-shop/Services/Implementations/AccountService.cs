@@ -104,6 +104,25 @@ namespace book_shop.Services.Implementations
                         msg = "Sai tài khoản hoặc mật khẩu chưa chính xác !"
                     };
                 }
+                if(account.is_active == false)
+                {
+                    _logger.LogWarning("Tài khoản bị khoá cho email: {Email}", loginDto.email);
+                    return new
+                    {
+                        status = HttpStatusCode.Forbidden,
+                        msg = "Tài khoản đã bị khoá !"
+                    };
+                }
+
+                if (account.is_verify == 0)
+                {
+                    _logger.LogWarning("Tài khoản chưa được xác thực cho email: {Email}", loginDto.email);
+                    return new
+                    {
+                        status = HttpStatusCode.Forbidden,
+                        msg = "Tài khoản chưa được xác thực !"
+                    };
+                }
                 var accessToken = _jwtService.GenerateJwtToken(account);
                 var refreshToken = _jwtService.GenerateRefreshToken();
 
