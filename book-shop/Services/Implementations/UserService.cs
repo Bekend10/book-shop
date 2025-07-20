@@ -11,11 +11,13 @@ namespace book_shop.Services.Implementations
     {
         private readonly IUserRepository _userRepository;
         private readonly IAddressRepository _addressRepository;
+        private readonly IAccountRepository _accountRepository;
 
-        public UserService(IUserRepository userRepository, IAddressRepository addressRepository)
+        public UserService(IUserRepository userRepository, IAddressRepository addressRepository, IAccountRepository accountRepository = null)
         {
             _userRepository = userRepository;
             _addressRepository = addressRepository;
+            _accountRepository = accountRepository;
         }
 
         public async Task<IEnumerable<User>> GetAllAsync() => await _userRepository.GetAllAsync();
@@ -23,6 +25,7 @@ namespace book_shop.Services.Implementations
         public async Task<object> GetByIdAsync(int id)
         {
             var user = await _userRepository.GetByIdAsync(id);
+            var account = await _accountRepository.GetAccountByEmailAsync(user.email);
             if (user == null)
             {
                 return new
@@ -42,6 +45,7 @@ namespace book_shop.Services.Implementations
                 msg = "Lấy thông tin người dùng thành công !",
                 data = new UserRespone
                 {
+                    account_id = account.account_id,
                     user_id = user.user_id,
                     email = user.email,
                     first_name = user.first_name,
