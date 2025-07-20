@@ -15,6 +15,7 @@ namespace book_shop.Models
         public int role_id { get; set; }
         public int is_verify { get; set; }
         public bool is_active { get; set; }
+        public DateTime last_active { get; set; }
         public Role role { get; set; }
     }
 }

@@ -58,7 +58,7 @@ namespace book_shop.Services.Implementations
                 var full_name = registerDto.first_name + " " + registerDto.last_name;
 
                 var refresh_token = _jwtService.GenerateRefreshToken();
-             
+
                 var account = new Account
                 {
                     email = registerDto.email,
@@ -104,7 +104,7 @@ namespace book_shop.Services.Implementations
                         msg = "Sai tài khoản hoặc mật khẩu chưa chính xác !"
                     };
                 }
-                if(account.is_active == false)
+                if (account.is_active == false)
                 {
                     _logger.LogWarning("Tài khoản bị khoá cho email: {Email}", loginDto.email);
                     return new
@@ -128,6 +128,7 @@ namespace book_shop.Services.Implementations
 
                 account.refresh_token = refreshToken;
                 account.refresh_token_ext = DateTime.Now.AddDays(7);
+                account.last_active = DateTime.Now;
                 await _accountRepository.UpdateAsync(account);
 
                 var user = await _userRepository.GetByIdAsync(account.user_id);
@@ -467,7 +468,7 @@ namespace book_shop.Services.Implementations
                     created_at = DateTime.Now,
                     phone_number = model.phone_number,
                     profile_image = img,
-                    address_id = 5, 
+                    address_id = 5,
                     gender = false,
                     dob = DateTime.MinValue
                 };
@@ -490,9 +491,63 @@ namespace book_shop.Services.Implementations
                     msg = "Thêm người dùng thành công !",
                 };
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError("Xảy ra lỗi khi thêm người dùng " + ex.Message);
+                return new
+                {
+                    status = HttpStatusCode.InternalServerError,
+                    msg = "Xảy ra lỗi " + ex.Message
+                };
+            }
+        }
+
+        public async Task<object> UpdateAccountByAdmin(int id, UpdateUserByAdmin model)
+        {
+            try
+            {
+                var existingAccount = await _accountRepository.GetByIdAsync(id);
+                var existingUser = await _userRepository.GetByIdAsync(existingAccount.user_id);
+
+                if (existingAccount == null)
+                {
+                    return new
+                    {
+                        status = HttpStatusCode.NotFound,
+                        msg = "Không tìm thấy tài khoản !"
+                    };
+                }
+
+                if (existingUser == null)
+                {
+                    return new
+                    {
+                        status = HttpStatusCode.NotFound,
+                        msg = "Không tìm thấy người dùng !"
+                    };
+                }
+
+                existingAccount.role_id = model.role_id;
+                existingAccount.is_active = model.is_active;
+
+                await _accountRepository.UpdateAsync(existingAccount);
+
+                existingUser.first_name = model.first_name;
+                existingUser.last_name = model.last_name;
+                existingUser.phone_number = model.phone_number;
+
+                await _userRepository.UpdateAsync(existingUser);
+
+                return new
+                {
+                    status = HttpStatusCode.OK,
+                    msg = "Cập nhật tài khoản thành công !"
+                };
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Lỗi khi cập nhật tài khoản: {Message}", ex.Message);
                 return new
                 {
                     status = HttpStatusCode.InternalServerError,
