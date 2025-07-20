@@ -19,8 +19,9 @@ namespace book_shop.Services.Implementations
         private readonly ILogger<AccountService> _logger;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository, IConfiguration configuration, IAddressRepository addressRepository)
+        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository, IConfiguration configuration, IAddressRepository addressRepository, IServiceScopeFactory scopeFactory = null)
         {
             _accountRepository = accountRepository;
             _jwtService = jwtService;
@@ -29,6 +30,7 @@ namespace book_shop.Services.Implementations
             _userRepository = userRepository;
             _configuration = configuration;
             _addressRepository = addressRepository;
+            _scopeFactory = scopeFactory;
         }
 
         public async Task<object> RegisterAsync(RegisterDto registerDto)
@@ -308,13 +310,25 @@ namespace book_shop.Services.Implementations
         public async Task<object> GetAllAccounts()
         {
             var accounts = await _accountRepository.GetAllAsync();
+
+            var tasks = accounts.Select(async account =>
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+                var user = await userRepo.GetByIdAsync(account.user_id);
+                account.user = user;
+            });
+
+            await Task.WhenAll(tasks);
+
             return new
             {
                 status = HttpStatusCode.OK,
-                msg = "Lấy danh sách tài khoản thành công !",
+                msg = "Lấy danh sách tài khoản thành công!",
                 accounts
             };
         }
+
 
         public async Task<object> GetAccountById(int id)
         {
