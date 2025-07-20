@@ -41,6 +41,8 @@ namespace book_shop.Repositories.Implementations
                     refresh_token_ext = _.refresh_token_ext,
                     user_id = _.user_id,
                     role_id = _.role_id,
+                    is_verify = _.is_verify,
+                    is_active = _.is_active,
                 })
                 .ToListAsync();
         }
