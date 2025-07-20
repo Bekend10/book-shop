@@ -485,6 +485,11 @@ namespace book_shop.Services.Implementations
                 };
                 await _accountRepository.AddUserWithAccountAsync(user, account);
                 _logger.LogInformation("Thêm người dùng thành công với email {email}", account.email);
+
+
+                var full_name = model.first_name + " " + model.last_name;
+                await _emailService.SendWelcomeEmailAsync(model.email, full_name);
+
                 return new
                 {
                     status = HttpStatusCode.Created,
