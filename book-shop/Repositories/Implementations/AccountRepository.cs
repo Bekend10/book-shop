@@ -43,6 +43,7 @@ namespace book_shop.Repositories.Implementations
                     role_id = _.role_id,
                     is_verify = _.is_verify,
                     is_active = _.is_active,
+                    last_active = _.last_active,
                 })
                 .ToListAsync();
         }
