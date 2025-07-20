@@ -145,5 +145,15 @@ namespace book_shop.Controllers
             var result = await _accountService.CreateNewAccountByAdmin(model);
             return Ok(result);
         }
+
+        [HttpPut]
+        [Route("update-account-by-admin")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> UpdateAccountByAdmin(int id, [FromBody] UpdateUserByAdmin model)
+        {
+            var result = await _accountService.UpdateAccountByAdmin(id, model);
+            if (result == null) { return NotFound(); }
+            return Ok(result);
+        }
     }
 }

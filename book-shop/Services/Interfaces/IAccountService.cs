@@ -16,5 +16,6 @@ namespace book_shop.Services.Interfaces
         Task<object> DeleteAccountAysnc(int id);
         Task<object> VerifyEmailAsync(string email);
         Task<object> CreateNewAccountByAdmin(CreateUserByAdmin model);
+        Task<object> UpdateAccountByAdmin(int id , UpdateUserByAdmin model);
     }
 }
