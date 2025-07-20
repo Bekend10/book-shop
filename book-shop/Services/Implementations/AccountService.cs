@@ -442,5 +442,63 @@ namespace book_shop.Services.Implementations
                 };
             }
         }
+
+        public async Task<object> CreateNewAccountByAdmin(CreateUserByAdmin model)
+        {
+            try
+            {
+                var existingAccount = await _accountRepository.GetAccountByEmailAsync(model.email);
+                if (existingAccount != null)
+                {
+                    return new
+                    {
+                        status = HttpStatusCode.BadRequest,
+                        msg = "Email đã tồn tại !"
+                    };
+                }
+                var passwordHash = BCrypt.Net.BCrypt.HashPassword(model.password);
+                var imgSettings = _configuration.GetSection("Images");
+                var img = imgSettings["DefaultImage"];
+                var user = new User
+                {
+                    first_name = model.first_name,
+                    last_name = model.last_name,
+                    email = model.email,
+                    created_at = DateTime.Now,
+                    phone_number = model.phone_number,
+                    profile_image = img,
+                    address_id = 5, 
+                    gender = false,
+                    dob = DateTime.MinValue
+                };
+                var refresh_token = _jwtService.GenerateRefreshToken();
+                var account = new Account
+                {
+                    email = model.email,
+                    role_id = model.role_id,
+                    password = passwordHash,
+                    refresh_token = refresh_token,
+                    refresh_token_ext = DateTime.Now.AddDays(7),
+                    is_active = model.is_active,
+                    is_verify = model.is_verify
+                };
+                await _accountRepository.AddUserWithAccountAsync(user, account);
+                _logger.LogInformation("Thêm người dùng thành công với email {email}", account.email);
+                return new
+                {
+                    status = HttpStatusCode.Created,
+                    msg = "Thêm người dùng thành công !",
+                };
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError("Xảy ra lỗi khi thêm người dùng " + ex.Message);
+                return new
+                {
+                    status = HttpStatusCode.InternalServerError,
+                    msg = "Xảy ra lỗi " + ex.Message
+                };
+            }
+        }
     }
 }
