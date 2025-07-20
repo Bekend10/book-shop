@@ -67,6 +67,7 @@ namespace book_shop.Services.Implementations
                     refresh_token = refresh_token,
                     refresh_token_ext = DateTime.Now,
                     is_active = true,
+                    is_verify = 0
                 };
 
                 await _emailService.SendWelcomeEmailAsync(registerDto.email, full_name);

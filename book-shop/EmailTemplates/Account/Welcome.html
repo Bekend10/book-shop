@@ -4,10 +4,38 @@
     <meta charset="utf-8" />
     <title>Chào mừng</title>
 </head>
-<body>
-    <h2>Xin chào, {{UserName}}</h2>
-    <p>Cảm ơn bạn đã đăng ký tại Book Shop.</p>
-    <p>Vui lòng nhấn vào link này để xác thực tài khoản của bạn <a href="https://localhost:7096/api/Accounts/verify-email?email={{email}}">Xác thực tại đây</a></p>
-    <p>Chúng tôi hy vọng bạn sẽ có trải nghiệm tuyệt vời!</p>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="padding: 40px 0;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 30px;">
+                    <tr>
+                        <td align="center" style="padding-bottom: 20px;">
+                            <h2 style="color: #333;">Xin chào, {{UserName}} 👋</h2>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="color: #555; font-size: 16px; line-height: 1.6;">
+                            <p>Cảm ơn bạn đã đăng ký tại <strong>Book Shop</strong>.</p>
+                            <p>Vui lòng nhấn vào nút dưới đây để xác thực tài khoản của bạn:</p>
+                            <p style="text-align: center; margin: 30px 0;">
+                                <a href="https://localhost:7096/api/v1/accounts/verify-email?email={{email}}"
+                                   style="display: inline-block; background-color: #4CAF50; color: white; text-decoration: none; padding: 12px 24px; border-radius: 5px; font-weight: bold;">
+                                    Xác thực tại đây
+                                </a>
+                            </p>
+                            <p>Vui lòng xác nhận để xác thực tài khoản và đăng nhập.</p>
+                            <p>Chúng tôi hy vọng bạn sẽ có trải nghiệm tuyệt vời!</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="padding-top: 30px; color: #999; font-size: 13px;">
+                            © 2025 Book Shop. All rights reserved.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

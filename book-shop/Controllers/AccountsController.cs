@@ -125,7 +125,7 @@ namespace book_shop.Controllers
         public async Task<IActionResult> VerifyEmail(string email)
         {
             var result = await _accountService.VerifyEmailAsync(email);
-            return Ok(result);
+            return Redirect("http://localhost:3000/login");
         }
 
         [HttpPut]
