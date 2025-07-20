@@ -127,5 +127,14 @@ namespace book_shop.Controllers
             var result = await _accountService.VerifyEmailAsync(email);
             return Ok(result);
         }
+
+        [HttpPut]
+        [Route("lock-account")]
+        [Authorize(Roles ="admin")]
+        public async Task<IActionResult> LockAccount(int id)
+        {
+            var result = await _accountService.LockAsync(id);
+            return Ok(result);
+        }
     }
 }

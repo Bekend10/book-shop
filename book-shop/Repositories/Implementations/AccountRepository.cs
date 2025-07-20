@@ -49,17 +49,8 @@ namespace book_shop.Repositories.Implementations
 
         public async Task<Account> GetByIdAsync(int id)
         {
-            return await _context.Accounts.Where(x => x.account_id == id)
-                .Select(_ => new Account
-                {
-                    account_id = _.account_id,
-                    email = _.email,
-                    password = _.password,
-                    refresh_token = _.refresh_token,
-                    refresh_token_ext = _.refresh_token_ext,
-                    user_id = _.user_id,
-                    role_id = _.role_id,
-                }).FirstOrDefaultAsync();
+            return await _context.Accounts.FirstOrDefaultAsync(x => x.account_id == id);
+
         }
 
         public async Task AddAsync(Account entity)
