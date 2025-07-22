@@ -1,5 +1,6 @@
 ﻿using book_shop.Data;
 using book_shop.Dto;
+using book_shop.Enums;
 using book_shop.Models;
 using book_shop.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -74,10 +75,43 @@ namespace book_shop.Repositories.Implementations
             return payment;
         }
 
+        public Task<List<MonthlyRevenueDto>> GetMonthlyRevenue(DateTime? startDate, DateTime? endDate)
+        {
+            var query = _context.Payments
+                .Where(p => p.payment_status == Enums.PaymentEnumStatus.Completed);
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(p => p.payment_date >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(p => p.payment_date <= endDate.Value);
+            }
+
+            return query
+                .GroupBy(p => new { p.payment_date.Year, p.payment_date.Month })
+                .Select(g => new MonthlyRevenueDto
+                {
+                    month = g.Key.Month,
+                    revenue = g.Sum(p => p.amount)
+                })
+                .ToListAsync();
+        }
+
+
         public Task<Payment> GetPaymentByMethod(int Id)
         {
             var payment = _context.Payments.FirstOrDefaultAsync(p => p.method_id == Id);
             return payment;
+        }
+
+        public Task<int> GetPaymentTotalByStatus()
+        {
+            return _context.Payments
+                .Where(p => p.payment_status == PaymentEnumStatus.Completed)
+                .SumAsync(p => p.amount);
         }
 
         public async Task UpdateAsync(Payment entity)
@@ -85,7 +119,7 @@ namespace book_shop.Repositories.Implementations
             var payment = await _context.Payments.AsNoTracking().FirstOrDefaultAsync(p => p.payment_id == entity.payment_id);
             if (payment != null)
             {
-                 _context.Entry(payment).CurrentValues.SetValues(entity);
+                _context.Entry(payment).CurrentValues.SetValues(entity);
                 await _context.SaveChangesAsync();
             }
         }

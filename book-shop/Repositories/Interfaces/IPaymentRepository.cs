@@ -8,5 +8,7 @@ namespace book_shop.Repositories.Interfaces
         Task<Payment> GetPaymentByMethod(int Id);
         Task<Payment> GetByOrderId(int id);
         Task<IEnumerable<PaymentDto>> GetAllPaymentsAsync();
+        Task<int> GetPaymentTotalByStatus();
+        Task<List<MonthlyRevenueDto>> GetMonthlyRevenue(DateTime? startDate, DateTime? endDate);
     }
 }

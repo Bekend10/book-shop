@@ -1,4 +1,5 @@
 ﻿using book_shop.Data;
+using book_shop.Dto;
 using book_shop.Models;
 using book_shop.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -102,6 +103,42 @@ namespace book_shop.Repositories.Implementations
                 .FirstOrDefaultAsync(b => b.book_id == id);
             return book;
         }
+
+        public async Task<List<TopProductDto>> GetTopProducts(DateTime? startDate, DateTime? endDate)
+        {
+            var orderDetails = _context.OrderDetails
+                .Include(od => od.book)
+                .ThenInclude(b => b.category)
+                .Include(od => od.order)
+                .Where(od => od.order.status == Enums.OrderEnumStatus.OrderStatus.Delivered);
+
+            if (startDate.HasValue)
+            {
+                orderDetails = orderDetails.Where(od => od.order.order_date >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                orderDetails = orderDetails.Where(od => od.order.order_date <= endDate.Value);
+            }
+
+            var result = await orderDetails
+                .GroupBy(od => od.book_id)
+                .Select(g => new TopProductDto
+                {
+                    product_id = g.Key,
+                    name = g.Select(x => x.book.title).FirstOrDefault(),
+                    image = g.Select(x => x.book.image_url).FirstOrDefault(),
+                    category_name = g.Select(x => x.book.category.name).FirstOrDefault(),
+                    quantity_sold = g.Sum(x => x.quantity),
+                    revenue = g.Sum(x => x.quantity * x.book.price)
+                })
+                .OrderByDescending(tp => tp.quantity_sold)
+                .ToListAsync();
+
+            return result;
+        }
+
 
         public async Task UpdateAsync(Book entity)
         {
