@@ -1,4 +1,5 @@
-﻿using book_shop.Models;
+﻿using book_shop.Dto;
+using book_shop.Models;
 
 namespace book_shop.Repositories.Interfaces
 {
@@ -8,5 +9,6 @@ namespace book_shop.Repositories.Interfaces
         Task<IEnumerable<Book>> GetBooksByCategoryIdAsync(int categoryId);
         Task<IEnumerable<Book>> GetBooksByPublisherAsync(string publisher);
         Task<IEnumerable<Book>> GetBooksByTitleAsync(string title);
-    }
+        Task<List<TopProductDto>> GetTopProducts(DateTime? startDate, DateTime? endDate);
+     }
 }
