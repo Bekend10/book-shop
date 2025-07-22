@@ -1,7 +1,10 @@
 ﻿using book_shop.Data;
+using book_shop.Dto;
+using book_shop.Enums;
 using book_shop.Models;
 using book_shop.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using static book_shop.Enums.OrderEnumStatus;
 
 namespace book_shop.Repositories.Implementations
 {
@@ -98,6 +101,42 @@ namespace book_shop.Repositories.Implementations
                     created_by = _.created_by
                 }).FirstOrDefaultAsync();
         }
+
+        public async Task<List<RevenueByCategoryDto>> GetRevenueByCategory(DateTime? startDate, DateTime? endDate)
+        {
+            var orderDetails = _context.OrderDetails
+                .Include(od => od.book)
+                    .ThenInclude(b => b.category)
+                .Include(od => od.order)
+                    .ThenInclude(o => o.Payment)
+                .Where(od =>
+                    od.order.status == OrderStatus.Delivered &&
+                    od.order.Payment != null &&
+                    od.order.status == OrderStatus.Delivered
+                );
+
+            if (startDate.HasValue)
+            {
+                orderDetails = orderDetails.Where(od => od.order.order_date >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                orderDetails = orderDetails.Where(od => od.order.order_date <= endDate.Value);
+            }
+
+            var result = await orderDetails
+                .GroupBy(od => new { od.book.category_id, od.book.category.name })
+                .Select(g => new RevenueByCategoryDto
+                {
+                    category_name = g.Key.name,
+                    total_revenue = g.Sum(od => od.order.total_amount)
+                })
+                .ToListAsync();
+
+            return result;
+        }
+
 
         public async Task UpdateAsync(Category entity)
         {

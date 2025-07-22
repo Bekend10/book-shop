@@ -1,4 +1,5 @@
 ﻿using book_shop.Data;
+using book_shop.Dto;
 using book_shop.Models;
 using book_shop.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +46,34 @@ namespace book_shop.Repositories.Implementations
             return orders;
         }
 
+        public Task<double> GetAverangeOrderValue(DateTime? startDate, DateTime? endDate)
+        {
+            if(startDate.HasValue && endDate.HasValue)
+            {
+                return _context.Orders
+                    .Where(o => o.order_date >= startDate.Value && o.order_date <= endDate.Value && o.status == Enums.OrderEnumStatus.OrderStatus.Delivered)
+                    .AverageAsync(o => (double)o.total_amount);
+            }
+            else if (startDate.HasValue)
+            {
+                return _context.Orders
+                    .Where(o => o.order_date >= startDate.Value && o.status == Enums.OrderEnumStatus.OrderStatus.Delivered)
+                    .AverageAsync(o => (double)o.total_amount);
+            }
+            else if (endDate.HasValue)
+            {
+                return _context.Orders
+                    .Where(o => o.order_date <= endDate.Value && o.status == Enums.OrderEnumStatus.OrderStatus.Delivered)
+                    .AverageAsync(o => (double)o.total_amount);
+            }
+            else
+            {
+                return _context.Orders
+                    .Where(o => o.status == Enums.OrderEnumStatus.OrderStatus.Delivered)
+                    .AverageAsync(o => (double)o.total_amount);
+            }
+        }
+
         public Task<Order> GetByIdAsync(int id)
         {
             var order = _context.Orders
@@ -84,6 +113,59 @@ namespace book_shop.Repositories.Implementations
                 .Where(x => x.user_id == userId)
                 .ToListAsync();
             return orders;
+        }
+
+        public Task<int> GetTotalProductSold(DateTime? startDate, DateTime? endDate)
+        {
+            if(startDate.HasValue && endDate.HasValue)
+            {
+                return _context.Orders
+                    .Where(o => o.order_date >= startDate.Value && o.order_date <= endDate.Value && o.status == Enums.OrderEnumStatus.OrderStatus.Delivered)
+                    .CountAsync();
+            }
+            else if (startDate.HasValue)
+            {
+                return _context.Orders
+                    .Where(o => o.order_date >= startDate.Value && o.status == Enums.OrderEnumStatus.OrderStatus.Delivered)
+                    .CountAsync();
+            }
+            else if (endDate.HasValue)
+            {
+                return _context.Orders
+                    .Where(o => o.order_date <= endDate.Value && o.status == Enums.OrderEnumStatus.OrderStatus.Delivered)
+                    .CountAsync();
+            }
+            else
+            {
+                return _context.Orders
+                    .Where(o => o.status == Enums.OrderEnumStatus.OrderStatus.Delivered)
+                    .CountAsync();
+            }
+        }
+
+        public async Task<List<ListOrderDto>> ListOrderDto(DateTime? startDate, DateTime? endDate)
+        {
+            var query = await _context.Orders
+                .Include(x => x.User)
+                .ToListAsync();
+            if (startDate.HasValue)
+            {
+                query = query.Where(o => o.order_date >= startDate.Value).ToList();
+            }
+            if (endDate.HasValue)
+            {
+                query = query.Where(o => o.order_date <= endDate.Value).ToList();
+            }
+            var listOrderDto = query.Select(o => new ListOrderDto
+            {
+                order_id = o.order_id,
+                customer_name = o.User != null ? o.User.first_name + o.User.last_name : "Unknown",
+                customer_email = o.User != null ? o.User.email : "Unknown",
+                created_at = o.order_date,
+                status = o.status.ToString(),
+                total_amount = o.total_amount
+            }).ToList();
+            return listOrderDto;
         }
 
         public async Task UpdateAsync(Order entity)
