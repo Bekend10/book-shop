@@ -1,4 +1,5 @@
 ﻿using book_shop.Dto;
+using book_shop.Models;
 
 namespace book_shop.Services.Interfaces
 {
@@ -17,5 +18,6 @@ namespace book_shop.Services.Interfaces
         Task<object> VerifyEmailAsync(string email);
         Task<object> CreateNewAccountByAdmin(CreateUserByAdmin model);
         Task<object> UpdateAccountByAdmin(int id , UpdateUserByAdmin model);
+        Task<(string token, User user)> LoginWithGoogleAsync(GoogleLoginDto dto);
     }
 }

@@ -3,6 +3,7 @@ using book_shop.EmailService;
 using book_shop.Models;
 using book_shop.Repositories.Interfaces;
 using book_shop.Services.Interfaces;
+using Google.Apis.Auth;
 using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Security.Cryptography;
@@ -560,6 +561,46 @@ namespace book_shop.Services.Implementations
                     msg = "Xảy ra lỗi " + ex.Message
                 };
             }
+        }
+
+        public async Task<(string token, User user)> LoginWithGoogleAsync(GoogleLoginDto dto)
+        {
+            var payload = await GoogleJsonWebSignature.ValidateAsync(dto.token, new GoogleJsonWebSignature.ValidationSettings
+            {
+                Audience = new[] { _configuration["Google:ClientId"] }
+            });
+
+            var user = await _userRepository.GetByGoogleIdAsync(payload.Subject);
+            if (user == null)
+            {
+                user = await _userRepository.CreateNewUser(new UserGoogleDto
+                {
+                    google_id = payload.Subject,
+                    email = payload.Email,
+                    first_name = payload.GivenName,
+                    last_name = payload.FamilyName,
+                    profile_img = payload.Picture,
+                    phone_number = "0987654321",
+                    address_id = 5
+                });
+            }
+
+            var account = await _accountRepository.GetAccountByEmailAsync(payload.Email);
+            if (account == null)
+            {
+                account = new Account
+                {
+                    email = payload.Email,
+                    role_id = 1,
+                    is_active = true,
+                    is_verify = 1,
+                    user_id = user.user_id
+                };
+                await _accountRepository.AddAsync(account);
+            }
+
+            var jwt = _jwtService.GenerateJwtToken(account);
+            return (jwt, user);
         }
     }
 }

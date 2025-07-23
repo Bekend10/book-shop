@@ -155,5 +155,33 @@ namespace book_shop.Controllers
             if (result == null) { return NotFound(); }
             return Ok(result);
         }
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDto dto)
+        {
+            try
+            {
+                var (token, user) = await _accountService.LoginWithGoogleAsync(dto);
+                return Ok(new
+                {
+                    access_token = token,
+                    user = new
+                    {
+                        user.user_id,
+                        user.first_name,
+                        user.last_name,
+                        user.email,
+                        user.profile_image,
+                        user.phone_number,
+                        user.Account.role_id,
+                        user.Address
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Token không hợp lệ", msg = ex.Message });
+            }
+        }
+
     }
 }

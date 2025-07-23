@@ -1,8 +1,10 @@
 ﻿using book_shop.Data;
+using book_shop.Dto;
 using book_shop.Models;
 using book_shop.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Security.Cryptography.Xml;
 
 namespace book_shop.Repositories.Implementations
 {
@@ -24,6 +26,23 @@ namespace book_shop.Repositories.Implementations
             await _context.SaveChangesAsync();
         }
 
+        public async Task<User> CreateNewUser(UserGoogleDto model)
+        {
+            var newUser = new User
+            {
+                google_id = model.google_id,
+                first_name = model.first_name,
+                last_name = model.last_name,
+                email = model.email,
+                profile_image = model.profile_img,
+                phone_number = model.phone_number,
+                address_id = model.address_id,
+            };
+            await _context.Users.AddAsync(newUser);
+            await _context.SaveChangesAsync();
+            return newUser;
+        }
+
         public async Task DeleteAsync(int id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -37,6 +56,11 @@ namespace book_shop.Repositories.Implementations
         public async Task<IEnumerable<User>> GetAllAsync()
         {
             return await _context.Users.ToListAsync();
+        }
+
+        public async Task<User> GetByGoogleIdAsync(string googleId)
+        {
+            return await _context.Users.FirstOrDefaultAsync(x => x.google_id == googleId);
         }
 
         public async Task<User> GetByIdAsync(int id)
