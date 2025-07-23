@@ -12,6 +12,19 @@
         public int address_id { get; set; }
     }
 
+    public class UserGoogleDto
+    {
+        public int id { get; set; }
+        public string google_id { get; set; }
+        public string email { get; set; }
+        public string name { get; set; }
+        public string first_name { get; set; }
+        public string last_name { get; set; }
+        public string profile_img { get; set; }
+        public string phone_number { get; set; }
+        public int address_id { get; set; }
+    }
+
     public class CreateUserByAdmin
     {
         public string first_name { get; set; }
