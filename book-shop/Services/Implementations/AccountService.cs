@@ -6,8 +6,10 @@ using book_shop.Services.Interfaces;
 using Google.Apis.Auth;
 using Microsoft.Extensions.Configuration;
 using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace book_shop.Services.Implementations
 {
@@ -21,8 +23,9 @@ namespace book_shop.Services.Implementations
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly HttpClient _httpClient;
 
-        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository, IConfiguration configuration, IAddressRepository addressRepository, IServiceScopeFactory scopeFactory = null)
+        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository, IConfiguration configuration, IAddressRepository addressRepository, IServiceScopeFactory scopeFactory = null, HttpClient httpClient = null)
         {
             _accountRepository = accountRepository;
             _jwtService = jwtService;
@@ -32,6 +35,7 @@ namespace book_shop.Services.Implementations
             _configuration = configuration;
             _addressRepository = addressRepository;
             _scopeFactory = scopeFactory;
+            _httpClient = httpClient;
         }
 
         public async Task<object> RegisterAsync(RegisterDto registerDto)
@@ -581,7 +585,8 @@ namespace book_shop.Services.Implementations
                     last_name = payload.FamilyName,
                     profile_img = payload.Picture,
                     phone_number = "0987654321",
-                    address_id = 5
+                    address_id = 5,
+                    created_at = DateTime.Now
                 });
             }
 
@@ -598,7 +603,66 @@ namespace book_shop.Services.Implementations
                 };
                 await _accountRepository.AddAsync(account);
             }
+            else
+            {
+                account.last_active = DateTime.Now;
+                await _accountRepository.UpdateAsync(account);
+            }
 
+            var jwt = _jwtService.GenerateJwtToken(account);
+            return (jwt, user);
+        }
+
+        public async Task<(string token, User user)> LoginWithFacebookAsync(string accessToken)
+        {
+            // 1. Gọi Facebook Graph API để lấy thông tin user
+            var url = $"https://graph.facebook.com/me?fields=id,email,first_name,last_name,picture&access_token={accessToken}";
+
+            var response = await _httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+                throw new Exception("Facebook token is invalid");
+
+            var content = await response.Content.ReadAsStringAsync();
+            var fbUser = JsonSerializer.Deserialize<UserFaceBookRespone>(content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            var user = await _userRepository.GetByFacebookIdAsync(fbUser.id);
+            if (user == null)
+            {
+                user = await _userRepository.CreateNewUser(new UserFaceBookDto
+                {
+                    facebook_id = fbUser.id,
+                    email = fbUser.email,
+                    first_name = fbUser.first_name,
+                    last_name = fbUser.last_name,
+                    profile_img = fbUser.profile_img,
+                    phone_number = "0987654321",
+                    address_id = 5,
+                    created_at = DateTime.Now
+                });
+            }
+
+            // 3. Kiểm tra hoặc tạo account
+            var account = await _accountRepository.GetAccountByEmailAsync(fbUser.email);
+            if (account == null)
+            {
+                account = new Account
+                {
+                    email = fbUser.email,
+                    role_id = 1,
+                    is_active = true,
+                    is_verify = 1,
+                    user_id = user.user_id,
+                };
+                await _accountRepository.AddAsync(account);
+            }
+            else
+            {
+                account.last_active = DateTime.Now;
+                await _accountRepository.UpdateAsync(account);
+            }
             var jwt = _jwtService.GenerateJwtToken(account);
             return (jwt, user);
         }

@@ -19,5 +19,6 @@ namespace book_shop.Services.Interfaces
         Task<object> CreateNewAccountByAdmin(CreateUserByAdmin model);
         Task<object> UpdateAccountByAdmin(int id , UpdateUserByAdmin model);
         Task<(string token, User user)> LoginWithGoogleAsync(GoogleLoginDto dto);
+        Task<(string token, User user)> LoginWithFacebookAsync(string accessToken);
     }
 }

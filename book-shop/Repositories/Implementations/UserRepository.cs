@@ -37,6 +37,25 @@ namespace book_shop.Repositories.Implementations
                 profile_image = model.profile_img,
                 phone_number = model.phone_number,
                 address_id = model.address_id,
+                created_at = model.created_at,
+            };
+            await _context.Users.AddAsync(newUser);
+            await _context.SaveChangesAsync();
+            return newUser;
+        }
+
+        public async Task<User> CreateNewUser(UserFaceBookDto model)
+        {
+            var newUser = new User
+            {
+                facebook_id = model.facebook_id,
+                first_name = model.first_name,
+                last_name = model.last_name,
+                email = model.email,
+                profile_image = model.profile_img,
+                phone_number = model.phone_number,
+                address_id = model.address_id,
+                created_at = model.created_at,
             };
             await _context.Users.AddAsync(newUser);
             await _context.SaveChangesAsync();
@@ -56,6 +75,12 @@ namespace book_shop.Repositories.Implementations
         public async Task<IEnumerable<User>> GetAllAsync()
         {
             return await _context.Users.ToListAsync();
+        }
+
+        public Task<User> GetByFacebookIdAsync(string facebookId)
+        {
+            return _context.Users
+                .FirstOrDefaultAsync(x => x.facebook_id == facebookId);
         }
 
         public async Task<User> GetByGoogleIdAsync(string googleId)
@@ -84,7 +109,8 @@ namespace book_shop.Repositories.Implementations
 
         public Task<User?> GetUserByEmailAsync(string email)
         {
-            throw new NotImplementedException();
+            return _context.Users
+                .FirstOrDefaultAsync(x => x.email == email);
         }
 
         public async Task UpdateAsync(User entity)
