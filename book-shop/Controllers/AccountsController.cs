@@ -183,5 +183,33 @@ namespace book_shop.Controllers
             }
         }
 
+        [HttpPost("login-facebook")]
+        public async Task<IActionResult> LoginWithFacebook([FromBody] FacebookLoginDto dto)
+        {
+            try
+            {
+                var (token, user) = await _accountService.LoginWithFacebookAsync(dto.token);
+                return Ok(new
+                {
+                    access_token = token,
+                    user = new
+                    {
+                        user.user_id,
+                        user.first_name,
+                        user.last_name,
+                        user.email,
+                        user.profile_image,
+                        user.phone_number,
+                        user.Account.role_id,
+                        user.Address
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Unauthorized(ex.Message);
+            }
+        }
+
     }
 }

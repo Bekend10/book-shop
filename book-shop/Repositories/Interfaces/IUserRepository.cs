@@ -8,7 +8,8 @@ namespace book_shop.Repositories.Interfaces
         Task<User?> GetUserByEmailAsync(string email);
         Task<int> GetCurrentUserIdAsync();
         Task<User> GetByGoogleIdAsync(string googleId);
+        Task<User> GetByFacebookIdAsync(string facebookId);
         Task<User> CreateNewUser(UserGoogleDto model);
-
+        Task<User> CreateNewUser(UserFaceBookDto model);
     }
 }

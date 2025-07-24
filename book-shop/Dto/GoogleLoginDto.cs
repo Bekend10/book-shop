@@ -4,4 +4,9 @@
     {
         public string token { get; set; }
     }
+    
+    public class FacebookLoginDto
+    {
+        public string token { get; set; }
+    }
 }
