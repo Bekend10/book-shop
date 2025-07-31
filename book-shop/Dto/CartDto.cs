@@ -8,7 +8,7 @@
         public DateTime created_at { get; set; }
         public DateTime? updated_at { get; set; }
 
-        public List<CartDetailDto> items { get; set; }
+        public List<CartDetailItemDto> items { get; set; }
     }
 
     public class CartDetailDto
@@ -23,6 +23,15 @@
         public int unit_price { get; set; }
         public DateTime created_at { get; set; }
         public DateTime? updated_at { get; set; }
+    }
+
+    public class CartDetailItemDto
+    {
+        public int cart_detail_id { get; set; }
+        public int book_id { get; set; }
+        public int quantity { get; set; }
+
+        public BookResponse book { get; set; }
     }
 
     public class AddToCartDto

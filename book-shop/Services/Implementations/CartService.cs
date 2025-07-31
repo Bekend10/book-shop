@@ -12,16 +12,18 @@ namespace book_shop.Services.Implementations
         private readonly ICartRepository _cartRepository;
         private readonly ICartDetailRepository _cartDetailRepository;
         private readonly IBookRepository _bookRepository;
+        private readonly IAuthorRepository _authorRepository;
         private readonly ILogger<CartService> _logger;
         private readonly UserHelper _userHelper;
 
-        public CartService(ICartRepository cartRepository, ILogger<CartService> logger, IBookRepository bookRepository, UserHelper userHelper, ICartDetailRepository cartDetailRepository)
+        public CartService(ICartRepository cartRepository, ILogger<CartService> logger, IBookRepository bookRepository, UserHelper userHelper, ICartDetailRepository cartDetailRepository, IAuthorRepository authorRepository)
         {
             _cartRepository = cartRepository;
             _logger = logger;
             _bookRepository = bookRepository;
             _userHelper = userHelper;
             _cartDetailRepository = cartDetailRepository;
+            _authorRepository = authorRepository;
         }
 
         public async Task<object> AddToCartAsync(AddToCartDto dto)
@@ -45,9 +47,8 @@ namespace book_shop.Services.Implementations
                     var Newcart = new Cart
                     {
                         user_id = userId,
-                        total_amount = 0,
+                        total_amount = book.price * dto.quantity,
                         created_at = DateTime.UtcNow,
-                        updated_at = DateTime.UtcNow
                     };
                     await _cartRepository.AddAsync(Newcart); // cart_id sẽ được EF gán
                 }
@@ -77,7 +78,7 @@ namespace book_shop.Services.Implementations
                     await _cartDetailRepository.AddAsync(cartDetail);
                 }
 
-                
+
 
                 return new { status = HttpStatusCode.OK, msg = "Thêm sách vào giỏ hàng thành công !" };
             }
@@ -88,20 +89,6 @@ namespace book_shop.Services.Implementations
             }
         }
 
-        public async Task<object> AddCartDetail()
-        {
-            var newCartDetail = new CartDetail
-            {
-                cart_id = 11,
-                book_id = 18,
-                quantity = 1,
-                unit_price = 1
-            };
-
-            await _cartDetailRepository.AddAsync(newCartDetail);
-            return new { status = HttpStatusCode.OK, msg = "Thêm chi tiết giỏ hàng thành công !" };
-        }
-
         public async Task<object> ClearCartAsync()
         {
             try
@@ -110,16 +97,6 @@ namespace book_shop.Services.Implementations
                 var cart = await _cartRepository.GetCartByUserIdAsync(userId);
                 if (cart == null) return new { status = HttpStatusCode.NotFound, msg = "Giỏ hàng không tồn tại" };
 
-                var cartDetails = await _cartDetailRepository.GetByCartIdAsync(cart.cart_id);
-                foreach (var item in cartDetails)
-                {
-                    var book = await _bookRepository.GetByIdAsync(item.book_id);
-                    if (book != null)
-                    {
-                        book.quantity += item.quantity;
-                        await _bookRepository.UpdateAsync(book);
-                    }
-                }
                 await _cartDetailRepository.DeleteAsync(cart.cart_id);
                 await _cartRepository.DeleteAsync(cart.cart_id);
 
@@ -132,32 +109,81 @@ namespace book_shop.Services.Implementations
             }
         }
 
-        public async Task<List<CartDetailDto>> GetCartDetailsAsync()
+        public async Task<object> GetCartDetailsAsync()
         {
             try
             {
                 var userId = _userHelper.GetCurrentUserId();
-                if (userId == null) return new List<CartDetailDto>();
+                if (userId == null)
+                {
+                    return new
+                    {
+                        status = HttpStatusCode.Unauthorized,
+                        msg = "Bạn cần đăng nhập để xem giỏ hàng"
+                    };
+                }
 
                 var cart = await _cartRepository.GetCartByUserIdAsync(userId);
-                if (cart == null) return new List<CartDetailDto>();
+                if (cart == null)
+                {
+                    return new
+                    {
+                        status = HttpStatusCode.NotFound,
+                        msg = "Giỏ hàng không tồn tại"
+                    };
+                }
 
                 var cartDetails = await _cartDetailRepository.GetByCartIdAsync(cart.cart_id);
-
-                var cartDetailDtos = cartDetails.Select(cd => new CartDetailDto
+                if (cartDetails.Count == 0)
                 {
-                    cart_detail_id = cd.cart_detail_id,
-                    book_id = cd.book_id,
-                    quantity = cd.quantity,
-                    unit_price = cd.unit_price,
-                }).ToList();
+                    return new
+                    {
+                        status = HttpStatusCode.NotFound,
+                        msg = "Giỏ hàng của bạn hiện đang trống"
+                    };
+                }
+                var cartDto = new CartDto
+                {
+                    cart_id = cart.cart_id,
+                    user_id = cart.user_id,
+                    total_amount = cart.total_amount,
+                    created_at = cart.created_at,
+                    updated_at = cart.updated_at,
+                    items = cartDetails.Select(cd => new CartDetailItemDto
+                    {
+                        cart_detail_id = cd.cart_detail_id,
+                        book_id = cd.book_id,
+                        quantity = cd.quantity,
+                        book = new BookResponse
+                        {
+                            book_id = cd.book.book_id,
+                            title = cd.book.title,
+                            price = cd.book.price,
+                            price_origin = cd.book.price_origin,
+                            image_url = cd.book.image_url,
+                            quantity = cd.book.quantity,
+                            publisher = cd.book.publisher,
+                            author = _authorRepository.GetByIdAsync(cd.book.author_id).Result?.name ?? "Không rõ tác giả"
+                        }
+                    }).ToList()
+                };
 
-                return cartDetailDtos;
+
+                return new
+                {
+                    status = HttpStatusCode.OK,
+                    msg = "Lấy chi tiết giỏ hàng thành công !",
+                    data = cartDto
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy chi tiết giỏ hàng");
-                return new List<CartDetailDto>();
+                return new
+                {
+                    status = HttpStatusCode.InternalServerError,
+                    msg = "Đã xảy ra lỗi khi lấy chi tiết giỏ hàng"
+                };
             }
         }
 
@@ -215,25 +241,42 @@ namespace book_shop.Services.Implementations
         {
             try
             {
-                var cart = await _cartRepository.GetCartByUserIdAsync(_userHelper.GetCurrentUserId());
-                if (cart == null) return new { status = HttpStatusCode.NotFound, msg = "Giỏ hàng không tồn tại" };
+                var userId = _userHelper.GetCurrentUserId();
+                var cart = await _cartRepository.GetCartByUserIdAsync(userId);
+                if (cart == null)
+                    return new { status = HttpStatusCode.NotFound, msg = "Giỏ hàng không tồn tại" };
+
                 var detail = await _cartDetailRepository.GetByCartIdAndBookIdAsync(cart.cart_id, bookId);
-                if (detail == null) return new { status = HttpStatusCode.NotFound, msg = "Sách không có trong giỏ hàng" };
+                if (detail == null)
+                    return new { status = HttpStatusCode.NotFound, msg = "Sách không có trong giỏ hàng" };
+
                 var book = await _bookRepository.GetByIdAsync(bookId);
-                if (book == null) return new { status = HttpStatusCode.NotFound, msg = "Sách không tồn tại" };
-                // Xoá giỏ hàng khi đặt hàng và xoá luôn giỏ hàng chi tiết
+                if (book == null)
+                    return new { status = HttpStatusCode.NotFound, msg = "Sách không tồn tại" };
+
                 await _cartDetailRepository.DeleteAsync(detail.cart_detail_id);
+
                 var details = await _cartDetailRepository.GetByCartIdAsync(cart.cart_id);
                 if (details.Count == 0)
                 {
                     await _cartRepository.DeleteAsync(cart.cart_id);
-                    return new { status = HttpStatusCode.OK, msg = "Giỏ hàng đã được xoá" };
+                    return new { status = HttpStatusCode.OK, msg = "Giỏ hàng đã được xoá hoàn toàn" };
                 }
+
+                cart.total_amount = details.Sum(cd => cd.unit_price * cd.quantity);
+                var newCart = new Cart
+                {
+                    user_id = cart.user_id,
+                    total_amount = cart.total_amount,
+                    created_at = cart.created_at,
+                    updated_at = DateTime.Now
+                };
+                await _cartRepository.UpdateAsync(newCart);
 
                 return new
                 {
                     status = HttpStatusCode.OK,
-                    message = "Sách đã được xoá khỏi giỏ hàng !",
+                    msg = "Sách đã được xoá khỏi giỏ hàng"
                 };
             }
             catch (Exception ex)
@@ -258,25 +301,24 @@ namespace book_shop.Services.Implementations
                 if (detail == null) return new { status = HttpStatusCode.NotFound, msg = "Sách không có trong giỏ hàng" };
 
                 var book = await _bookRepository.GetByIdAsync(dto.book_id);
-                if (book == null || dto.quantity > book.quantity)
-                    return new { status = HttpStatusCode.BadRequest, msg = "Số lượng vượt quá tồn kho hoặc sách không tồn tại" };
+                if (book == null)
+                    return new { status = HttpStatusCode.BadRequest, msg = "Sách không tồn tại" };
 
-                int diff = dto.quantity - detail.quantity;
+                if (dto.quantity > book.quantity)
+                    return new { status = HttpStatusCode.BadRequest, msg = "Số lượng vượt quá tồn kho" };
+
                 detail.quantity = dto.quantity;
                 await _cartDetailRepository.UpdateAsync(detail);
 
-                book.quantity -= diff;
-                await _bookRepository.UpdateAsync(book);
-
                 var details = await _cartDetailRepository.GetByCartIdAsync(cart.cart_id);
                 cart.total_amount = details.Sum(cd => cd.unit_price * cd.quantity);
-                Cart newCart = new Cart
+                cart.updated_at = DateTime.Now;
+                var newCart = new Cart
                 {
-                    cart_id = cart.cart_id,
                     user_id = cart.user_id,
                     total_amount = cart.total_amount,
                     created_at = cart.created_at,
-                    updated_at = DateTime.UtcNow
+                    updated_at = cart.updated_at
                 };
                 await _cartRepository.UpdateAsync(newCart);
 
@@ -313,12 +355,21 @@ namespace book_shop.Services.Implementations
                 total_amount = cart.total_amount,
                 created_at = cart.created_at,
                 updated_at = cart.updated_at,
-                items = cartDetails.Select(cd => new CartDetailDto
+                items = cartDetails.Select(cd => new CartDetailItemDto
                 {
                     cart_detail_id = cd.cart_detail_id,
                     book_id = cd.book_id,
                     quantity = cd.quantity,
-                    unit_price = cd.unit_price,
+                    book = new BookResponse
+                    {
+                        book_id = cd.book.book_id,
+                        title = cd.book.title,
+                        price = cd.book.price,
+                        price_origin = cd.book.price_origin,
+                        image_url = cd.book.image_url,
+                        quantity = cd.book.quantity,
+                        publisher = cd.book.publisher,
+                    }
                 }).ToList()
             };
             return new
