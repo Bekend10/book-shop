@@ -107,6 +107,18 @@ namespace book_shop.Repositories.Implementations
             return payment;
         }
 
+        public Task<PaymentStatus> GetPaymentStatus(int id)
+        {
+            return _context.Payments
+                .Where(p => p.order_id == id)
+                .Select(p => new PaymentStatus
+                {
+                    PaymentId = p.payment_id,
+                    Status = p.payment_status
+                })
+                .FirstOrDefaultAsync();
+        }
+
         public Task<int> GetPaymentTotalByStatus()
         {
             return _context.Payments

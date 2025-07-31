@@ -15,5 +15,6 @@ namespace book_shop.Services.Interfaces
         Task<object> DeleteOrderAsync(int id);
         Task<object> GetOrderDetailsByOrderIdAsync(int orderId);
         Task<object> GetOrdersByStatusAsync(Enums.OrderEnumStatus.OrderStatus statusId);
+        Task<object> CancleOrderAsync(int id);
     }
 }
