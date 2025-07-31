@@ -21,8 +21,9 @@ namespace book_shop.Services.Implementations
         private readonly IBookRepository _book;
         private readonly UserHelper _userHelper;
         private readonly ILogger<OrderService> _logger;
+        private readonly IPaymentRepository _paymentRepository;
 
-        public OrderService(ILogger<OrderService> logger, IOrderRepository orderRepository, IOrderDetailRepository orderDetailRepository, IBookRepository book, UserHelper userHelper, ICartRepository cartRepository, ICartDetailRepository cartDetailRepository, IUserRepository userRepository, IAddressRepository addressRepository = null, IBookDetailRepository bookDetailRepository = null, IAuthorRepository authorRepository = null)
+        public OrderService(ILogger<OrderService> logger, IOrderRepository orderRepository, IOrderDetailRepository orderDetailRepository, IBookRepository book, UserHelper userHelper, ICartRepository cartRepository, ICartDetailRepository cartDetailRepository, IUserRepository userRepository, IAddressRepository addressRepository, IBookDetailRepository bookDetailRepository, IAuthorRepository authorRepository, IPaymentRepository paymentRepository)
         {
             _logger = logger;
             _orderRepository = orderRepository;
@@ -35,8 +36,63 @@ namespace book_shop.Services.Implementations
             _addressRepository = addressRepository;
             _bookDetailRepository = bookDetailRepository;
             _authorRepository = authorRepository;
+            _paymentRepository = paymentRepository;
         }
 
+        public async Task<object> CancleOrderAsync(int id)
+        {
+            try
+            {
+                var isExistingOrder = await _orderRepository.GetByIdAsync(id);
+                if (isExistingOrder == null)
+                {
+                    _logger.LogWarning("Đơn hàng với ID {OrderId} không tồn tại.", id);
+                    return new
+                    {
+                        status = HttpStatusCode.NotFound,
+                        message = "Đơn hàng không tồn tại."
+                    };
+                }
+                if (isExistingOrder.status == OrderEnumStatus.OrderStatus.Cancelled)
+                {
+                    _logger.LogWarning("Đơn hàng với ID {OrderId} đã được hủy trước đó.", id);
+                    return new
+                    {
+                        status = HttpStatusCode.BadRequest,
+                        message = "Đơn hàng đã được hủy trước đó."
+                    };
+                }
+                isExistingOrder.status = OrderEnumStatus.OrderStatus.Cancelled;
+                await _orderRepository.UpdateAsync(isExistingOrder);
+                _logger.LogInformation("Đơn hàng với ID {OrderId} đã được hủy thành công.", id);
+                var orderDetail = (OrderDetail)await _orderDetailRepository.GetOrderDetailsByOrderIdAsync(id);
+                if (orderDetail != null)
+                {
+                    var book = await _book.GetByIdAsync(orderDetail.book_id);
+                    if (book != null)
+                    {
+                        book.quantity += orderDetail.quantity;
+                        await _book.UpdateAsync(book);
+                        _logger.LogInformation("Số lượng sách đã được cập nhật sau khi hủy đơn hàng với ID {OrderId}.", id);
+                    }
+                }
+                _logger.LogInformation("Đơn hàng đã được hủy thành công với ID: {OrderId}", id);
+                return new
+                {
+                    status = HttpStatusCode.OK,
+                    message = "Đơn hàng đã được hủy thành công."
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Lỗi khi hủy đơn hàng: " + ex.Message);
+                return new
+                {
+                    status = HttpStatusCode.InternalServerError,
+                    message = "Lỗi khi hủy đơn hàng: " + ex.Message
+                };
+            }
+        }
 
         public async Task<object> CreateOrderAsync(OrderDto order)
         {
@@ -52,18 +108,6 @@ namespace book_shop.Services.Implementations
                         message = "Bạn cần đăng nhập để tạo đơn hàng."
                     };
                 }
-
-                var newOrder = new Order
-                {
-                    user_id = userId,
-                    method_id = order.method_id,
-                    order_date = DateTime.Now,
-                    status = OrderEnumStatus.OrderStatus.Pending,
-                    total_amount = 0
-                };
-
-                await _orderRepository.AddAsync(newOrder);
-                _logger.LogInformation("Đơn hàng mới đã được tạo với ID: {OrderId}", newOrder.order_id);
 
                 #region validate order details
                 var isExistingBook = await _book.GetByIdAsync(order.book_id);
@@ -109,6 +153,18 @@ namespace book_shop.Services.Implementations
 
                 #endregion
 
+                var newOrder = new Order
+                {
+                    user_id = userId,
+                    method_id = order.method_id,
+                    order_date = DateTime.Now,
+                    status = OrderEnumStatus.OrderStatus.Pending,
+                    total_amount = 0
+                };
+
+                await _orderRepository.AddAsync(newOrder);
+                _logger.LogInformation("Đơn hàng mới đã được tạo với ID: {OrderId}", newOrder.order_id);
+
                 var newOrderDetail = new OrderDetail
                 {
                     order_id = newOrder.order_id,
@@ -119,7 +175,7 @@ namespace book_shop.Services.Implementations
 
                 newOrder.total_amount = newOrderDetail.quantity * newOrderDetail.unit_price;
                 isExistingBook.quantity -= newOrderDetail.quantity;
-                isExistingBook.is_bn = isExistingBook.quantity <= 0 ? 0 : 1; 
+                isExistingBook.is_bn = isExistingBook.quantity <= 0 ? 0 : 1;
 
                 await _book.UpdateAsync(isExistingBook);
                 await _orderDetailRepository.AddAsync(newOrderDetail);
@@ -338,7 +394,7 @@ namespace book_shop.Services.Implementations
                             bio = author.bio,
                         } : null
                     }
-                });;
+                }); ;
             }
 
             if (orders == null || !orders.Any())
@@ -370,8 +426,9 @@ namespace book_shop.Services.Implementations
                     message = "Bạn cần đăng nhập để xem đơn hàng của mình."
                 };
             }
+
             var orders = await _orderRepository.GetOrderByUserId(userId);
-            if (orders == null)
+            if (orders == null || !orders.Any())
             {
                 _logger.LogInformation("Không có đơn hàng nào được tìm thấy cho người dùng với ID {UserId}.", userId);
                 return new
@@ -380,14 +437,64 @@ namespace book_shop.Services.Implementations
                     message = "Không có đơn hàng nào được tìm thấy cho người dùng này."
                 };
             }
+            var orderDetails = new List<OrderRespone>();
+            foreach (var order in orders)
+            {
+                var orderDetail = (OrderDetail)await _orderDetailRepository.GetOrderDetailsByOrderIdAsync(order.order_id);
+                if (orderDetail != null)
+                {
+                    var book = await _book.GetByIdAsync(orderDetail.book_id);
+                    orderDetail.book = book;
+
+                    var author = await _authorRepository.GetByIdAsync(orderDetail?.book?.author_id ?? 0);
+                    if (author != null)
+                    {
+                        orderDetail.book.authors = new List<Author> { author };
+                    }
+                }
+                order.orderDetail = orderDetail;
+                var paymentStatus = await _paymentRepository.GetPaymentStatus(order.order_id);
+                if (paymentStatus == null)
+                {
+                    orderDetails.Add(new OrderRespone
+                    {
+                        order_id = order.order_id,
+                        user = order.User,
+                        address = await _addressRepository.GetByIdAsync(order.user_id),
+                        orderDetail = orderDetail,
+                        order_date = order.order_date,
+                        payment = PaymentEnumStatus.Pending,
+                        total_amount = order.total_amount,
+                        method_id = order.method_id,
+                        status = order.status,
+                    });
+                }
+                else
+                {
+                    orderDetails.Add(new OrderRespone
+                    {
+                        order_id = order.order_id,
+                        user = order.User,
+                        address = await _addressRepository.GetByIdAsync(order.user_id),
+                        orderDetail = orderDetail,
+                        order_date = order.order_date,
+                        payment = paymentStatus.Status,
+                        total_amount = order.total_amount,
+                        method_id = order.method_id,
+                        status = order.status,
+                    });
+                }
+            }
+
             _logger.LogInformation("Lấy danh sách đơn hàng cho người dùng với ID {UserId} thành công.", userId);
             return new
             {
                 status = HttpStatusCode.OK,
                 message = "Lấy danh sách đơn hàng thành công.",
-                data = orders
+                data = orderDetails
             };
         }
+
 
         public async Task<object> GetOrderByIdAsync(int id)
         {

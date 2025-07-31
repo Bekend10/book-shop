@@ -1,4 +1,5 @@
-﻿using book_shop.Models;
+﻿using book_shop.Enums;
+using book_shop.Models;
 using static book_shop.Enums.OrderEnumStatus;
 
 namespace book_shop.Dto
@@ -32,6 +33,7 @@ namespace book_shop.Dto
         public OrderStatus status { get; set; }
         public int total_amount { get; set; }
         public Method method { get; set; }
+        public PaymentEnumStatus payment { get; set; }
         public int method_id { get; set; }
         public int quantity { get; set; }
         public int book_id { get; set; }

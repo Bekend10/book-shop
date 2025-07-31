@@ -10,5 +10,6 @@ namespace book_shop.Repositories.Interfaces
         Task<IEnumerable<PaymentDto>> GetAllPaymentsAsync();
         Task<int> GetPaymentTotalByStatus();
         Task<List<MonthlyRevenueDto>> GetMonthlyRevenue(DateTime? startDate, DateTime? endDate);
+        Task<PaymentStatus> GetPaymentStatus(int id);
     }
 }

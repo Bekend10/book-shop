@@ -119,5 +119,16 @@ namespace book_shop.Controllers
             return Ok(createdOrder);
 
         }
+        [HttpPut("cancel-order")]
+        [Authorize]
+        public async Task<IActionResult> CancelOrder(int id)
+        {
+            var result = await _orderService.CancleOrderAsync(id);
+            if (result == null)
+            {
+                return NotFound(new { message = "Không tìm thấy đơn hàng" });
+            }
+            return Ok(result);
+        }
     }
 }
