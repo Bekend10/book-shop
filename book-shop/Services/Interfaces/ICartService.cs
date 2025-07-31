@@ -9,12 +9,11 @@ namespace book_shop.Services.Interfaces
         Task<object> GetCartByUserIdAsync(int userId);
         Task<object> RemoveFromCartAsync(int bookId);
         Task<object> ClearCartAsync();
-        Task<List<CartDetailDto>> GetCartDetailsAsync();
+        Task<object> GetCartDetailsAsync();
         Task<object> UpdateCartItemQuantityAsync(UpdateQuantityToCartDto dto);
         Task<object> CheckoutAsync();
         Task<object> IsBookInCartAsync(int bookId);
         Task<int> GetTotalItemsInCartAsync();
         Task<decimal> GetTotalPriceInCartAsync();
-        Task<object> AddCartDetail();
     }
 }

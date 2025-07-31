@@ -31,6 +31,19 @@ namespace book_shop.Dto
         public ICollection<CartDetail> cartDetails { get; set; } = null!;
     }
 
+    public class BookResponse
+    {
+        public int book_id { get; set; }
+        public string title { get; set; }
+        public int price { get; set; }
+        public int price_origin { get; set; }
+        public string image_url { get; set; }
+        public int quantity { get; set; }
+        public string publisher { get; set; }
+
+        public string author { get; set; }
+    }
+
 
     public class UpdateBookDto
     {

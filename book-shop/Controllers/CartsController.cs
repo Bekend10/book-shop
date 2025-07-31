@@ -27,7 +27,7 @@ namespace book_shop.Controllers
                 return NotFound(new
                 {
                     status = HttpStatusCode.NotFound,
-                    msg = "Giỏ hàng không tồn tại"
+                    msg = "Giỏ hàng trống"
                 });
             }
 
@@ -39,23 +39,6 @@ namespace book_shop.Controllers
         public async Task<IActionResult> AddToCart([FromBody] AddToCartDto dto)
         {
             var result = await _cartService.AddToCartAsync(dto);
-            if (result == null)
-            {
-                return NotFound(new
-                {
-                    status = HttpStatusCode.NotFound,
-                    msg = "Sách không tồn tại"
-                });
-            }
-
-            return Ok(result);
-        }
-
-        [HttpPost("test")]
-        [Authorize]
-        public async Task<IActionResult> AddToCartDetail()
-        {
-            var result = await _cartService.AddCartDetail();
             if (result == null)
             {
                 return NotFound(new

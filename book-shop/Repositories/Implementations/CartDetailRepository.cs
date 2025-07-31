@@ -56,6 +56,7 @@
             public async Task<List<CartDetail>> GetByCartIdAsync(int cartId)
             {
                 return await _context.CartDetails
+                .Include(cd => cd.book)
                 .Where(cd => cd.cart_id == cartId)
                 .ToListAsync();
             }
