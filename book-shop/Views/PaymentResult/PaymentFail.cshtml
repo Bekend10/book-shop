@@ -39,15 +39,15 @@
             overflow: hidden;
         }
 
-        .failure-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, #ff6b6b, #ee5a52, #ff5722, #f44336);
-        }
+            .failure-container::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 5px;
+                background: linear-gradient(90deg, #ff6b6b, #ee5a52, #ff5722, #f44336);
+            }
 
         .failure-icon {
             width: 80px;
@@ -61,16 +61,24 @@
             animation: shakeError 0.8s ease-out;
         }
 
-        .failure-icon svg {
-            width: 40px;
-            height: 40px;
-            fill: white;
-        }
+            .failure-icon svg {
+                width: 40px;
+                height: 40px;
+                fill: white;
+            }
 
         @@keyframes shakeError {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
+            0%, 100% {
+                transform: translateX(0);
+            }
+
+            10%, 30%, 50%, 70%, 90% {
+                transform: translateX(-5px);
+            }
+
+            20%, 40%, 60%, 80% {
+                transform: translateX(5px);
+            }
         }
 
         .vnpay-logo {
@@ -144,9 +152,9 @@
             border-bottom: 1px solid #e9ecef;
         }
 
-        .detail-row:last-child {
-            border-bottom: none;
-        }
+            .detail-row:last-child {
+                border-bottom: none;
+            }
 
         .detail-label {
             color: #6c757d;
@@ -192,31 +200,31 @@
             align-items: center;
         }
 
-        .causes-title svg {
-            width: 20px;
-            height: 20px;
-            margin-right: 8px;
-            fill: #f57c00;
-        }
+            .causes-title svg {
+                width: 20px;
+                height: 20px;
+                margin-right: 8px;
+                fill: #f57c00;
+            }
 
         .causes-list {
             list-style: none;
             padding: 0;
         }
 
-        .causes-list li {
-            color: #6c757d;
-            margin-bottom: 10px;
-            padding-left: 20px;
-            position: relative;
-        }
+            .causes-list li {
+                color: #6c757d;
+                margin-bottom: 10px;
+                padding-left: 20px;
+                position: relative;
+            }
 
-        .causes-list li::before {
-            content: '•';
-            color: #f57c00;
-            position: absolute;
-            left: 0;
-        }
+                .causes-list li::before {
+                    content: '•';
+                    color: #f57c00;
+                    position: absolute;
+                    left: 0;
+                }
 
         .buttons {
             display: flex;
@@ -243,10 +251,10 @@
             color: white;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
-        }
+            .btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+            }
 
         .btn-secondary {
             background: white;
@@ -254,20 +262,20 @@
             border: 2px solid #e9ecef;
         }
 
-        .btn-secondary:hover {
-            background: #f8f9fa;
-            border-color: #dee2e6;
-        }
+            .btn-secondary:hover {
+                background: #f8f9fa;
+                border-color: #dee2e6;
+            }
 
         .btn-danger {
             background: linear-gradient(135deg, #ff6b6b, #ee5a52);
             color: white;
         }
 
-        .btn-danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
-        }
+            .btn-danger:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+            }
 
         .footer-note {
             margin-top: 25px;
@@ -285,11 +293,11 @@
             margin-top: 20px;
         }
 
-        .contact-info strong {
-            color: #2e7d32;
-        }
+            .contact-info strong {
+                color: #2e7d32;
+            }
 
-       @@media (max-width: 600px) {
+        @@media (max-width: 600px) {
             .failure-container {
                 padding: 30px 20px;
                 margin: 10px;
@@ -322,6 +330,7 @@
                 transform: translate(-50%, -50%) scale(0.8);
                 opacity: 1;
             }
+
             100% {
                 transform: translate(-50%, -50%) scale(1.2);
                 opacity: 0;
@@ -419,18 +428,17 @@
         }
 
         function goBack() {
-            alert('Quay lại trang trước...');
-            // window.history.back();
+            window.location.href = 'http://localhost:3000/';
         }
 
         // Add click effect to failure icon
-        document.querySelector('.failure-icon').addEventListener('click', function() {
+        document.querySelector('.failure-icon').addEventListener('click', function () {
             this.style.animation = 'shakeError 0.8s ease-out';
             setTimeout(() => {
                 this.style.animation = '';
             }, 800);
         });
-        
+
     </script>
 </body>
 </html>

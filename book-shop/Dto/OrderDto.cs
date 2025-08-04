@@ -6,15 +6,9 @@ namespace book_shop.Dto
 {
     public class OrderDto
     {
-        public int order_id { get; set; }
-        public int user_id { get; set; }
-        public DateTime order_date { get; set; }
-        public OrderStatus status { get; set; }
-        public int total_amount { get; set; }
         public int method_id { get; set; }
-        public int quantity { get; set; }
-        public int book_id { get; set; }
-        public int unit_price { get; set; }
+
+        public List<OrderBookItemDto> items { get; set; } = new();
     }
 
     public class UpdateOrderDto
@@ -39,4 +33,35 @@ namespace book_shop.Dto
         public int book_id { get; set; }
         public int unit_price { get; set; }
     }
+
+    public class OrderBookItemDto
+    {
+        public int book_id { get; set; }
+        public int quantity { get; set; }
+        public int unit_price { get; set; }
+    }
+
+    public class OrderResponeDto
+    {
+        public int order_id { get; set; }
+        public User user { get; set; }
+        public Address address { get; set; }
+
+        public List<OrderDetailResponse> items { get; set; }
+
+        public DateTime order_date { get; set; }
+        public OrderStatus status { get; set; }
+        public int total_amount { get; set; }
+        public Method method { get; set; }
+        public PaymentEnumStatus payment { get; set; }
+    }
+
+    public class OrderDetailResponse
+    {
+        public int book_id { get; set; }
+        public BookResponseDto book { get; set; }
+        public int quantity { get; set; }
+        public int unit_price { get; set; }
+    }
+
 }
