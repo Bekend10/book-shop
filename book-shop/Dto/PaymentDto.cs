@@ -18,7 +18,6 @@ namespace book_shop.Dto
         public int OrderId { get; set; }
         public int MethodId { get; set; }
         public DateTime PaymentDate { get; set; }
-        public PaymentEnumStatus PaymentStatus { get; set; }
     }
 
     public class PaymentStatus

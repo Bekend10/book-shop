@@ -52,13 +52,6 @@ namespace book_shop.Services.Implementations
                     };
                     await _cartRepository.AddAsync(Newcart); // cart_id sẽ được EF gán
                 }
-
-                // Lấy lại cart_id đảm bảo EF đã gán
-                if (cart.cart_id == 0)
-                {
-                    cart = await _cartRepository.GetCartByUserIdAsync(userId);
-                }
-
                 //Tạo hoặc cập nhật CartDetail
                 var cartDetail = await _cartDetailRepository.GetByCartIdAndBookIdAsync(cart.cart_id, dto.book_id);
                 if (cartDetail != null)
@@ -77,6 +70,7 @@ namespace book_shop.Services.Implementations
                     };
                     await _cartDetailRepository.AddAsync(cartDetail);
                 }
+
 
 
 

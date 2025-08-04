@@ -104,6 +104,11 @@ namespace book_shop.Repositories.Implementations
             return book;
         }
 
+        public async Task<List<Book>> GetByIdsAsync(IEnumerable<int> bookIds)
+        {
+            return await _context.Books.Where(b => bookIds.Contains(b.book_id)).ToListAsync();
+        }
+
         public async Task<List<TopProductDto>> GetTopProducts(DateTime? startDate, DateTime? endDate)
         {
             var orderDetails = _context.OrderDetails
