@@ -18,7 +18,7 @@ namespace book_shop.Controllers
 
         [HttpPost("create-review-book")]
         [Authorize]
-        public async Task<IActionResult> CreateReviewBook([FromBody] BookReviewCreateDto bookReview)
+        public async Task<IActionResult> CreateReviewBook([FromForm] BookReviewCreateDto bookReview)
         {
             if (bookReview == null)
             {
@@ -30,7 +30,7 @@ namespace book_shop.Controllers
 
         [HttpPut("update-review-book")]
         [Authorize]
-        public async Task<IActionResult> UpdateReviewBook([FromBody] BookReviewUpdateDto bookReview)
+        public async Task<IActionResult> UpdateReviewBook([FromForm] BookReviewUpdateDto bookReview)
         {
             if (bookReview == null)
             {
@@ -65,7 +65,7 @@ namespace book_shop.Controllers
         }
 
         [HttpGet("get-all-reviews")]
-        [Authorize(Roles = "admin")]
+        [Authorize]
         public async Task<IActionResult> GetAllReviews()
         {
             var result = await _bookReviewService.GetAllReviews();

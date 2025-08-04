@@ -110,6 +110,7 @@ namespace book_shop.Repositories.Implementations
             {
                 existingReview.book_id = entity.book_id;
                 existingReview.user_id = entity.user_id;
+                existingReview.image = entity.image;
                 existingReview.rating = entity.rating;
                 existingReview.content = entity.content;
                 existingReview.created_at = entity.created_at;
