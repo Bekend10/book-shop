@@ -11,18 +11,20 @@ namespace book_shop.Services.Implementations
     public class BookReviewService : IBookReviewService
     {
         private readonly IBookReviewRepository _bookReviewRepository;
+        private readonly ICloudService _cloudService;
         private readonly IBookRepository _bookRepository;
         private readonly IUserRepository _userRepository;
         private readonly ILogger<BookReviewService> _logger;
         private readonly UserHelper _userHelper;
 
-        public BookReviewService(IBookReviewRepository bookReviewRepository, ILogger<BookReviewService> logger, IUserRepository userRepository, IBookRepository bookRepository, UserHelper userHelper)
+        public BookReviewService(IBookReviewRepository bookReviewRepository, ILogger<BookReviewService> logger, IUserRepository userRepository, IBookRepository bookRepository, UserHelper userHelper, ICloudService cloudService)
         {
             _bookReviewRepository = bookReviewRepository;
             _logger = logger;
             _userRepository = userRepository;
             _bookRepository = bookRepository;
             _userHelper = userHelper;
+            _cloudService = cloudService;
         }
 
         public async Task<object> AddReview(BookReviewCreateDto bookReview)
@@ -30,14 +32,34 @@ namespace book_shop.Services.Implementations
             try
             {
                 var userId = _userHelper.GetCurrentUserId();
-                await _bookReviewRepository.AddAsync(new BookReview
+                if(userId < 1)
+                {
+                    _logger.LogWarning("Không tìm thấy người dùng hiện tại.");
+                    return new
+                    {
+                        status = HttpStatusCode.Unauthorized,
+                        msg = "Bạn cần đăng nhập để thêm đánh giá sách.",
+                    };
+                }
+                var newBookReview = new BookReview
                 {
                     book_id = bookReview.book_id,
                     user_id = userId,
                     rating = bookReview.rating,
                     content = bookReview.content,
                     created_at = DateTime.UtcNow
-                });
+                };
+
+                if (bookReview.image != null)
+                {
+                    var imagePath = await _cloudService.UploadImageAsync(bookReview.image);
+                    if (!string.IsNullOrEmpty(imagePath))
+                    {
+                        newBookReview.image = imagePath;
+                    }
+                }
+                await _bookReviewRepository.AddAsync(newBookReview);
+
                 _logger.LogInformation("Đánh giá sách đã được thêm thành công: {BookReview}", bookReview);
                 return new
                 {
@@ -115,7 +137,8 @@ namespace book_shop.Services.Implementations
                         image_url = r.book.image_url,
                         description = r.book.bookDetail?.description,
                         price = r.book.price,
-                        category_id = r.book.category_id
+                        category_id = r.book.category_id,
+                        rating = r.book.bookReviews.Average(br => br.rating)
                     },
                     User = new UserRespone
                     {
@@ -128,6 +151,7 @@ namespace book_shop.Services.Implementations
                     },
                     rating = r.rating,
                     content = r.content,
+                    image = r.image?.ToString(),
                     created_at = r.created_at
                 }).ToList();
                 _logger.LogInformation("Đã lấy tất cả đánh giá sách thành công.");
@@ -217,6 +241,7 @@ namespace book_shop.Services.Implementations
                     },
                     rating = review.rating,
                     content = review.content,
+                    image = review.image?.ToString(),
                     created_at = review.created_at
                 };
                 _logger.LogInformation("Đã lấy đánh giá sách với ID {Id} thành công", id);
@@ -320,6 +345,7 @@ namespace book_shop.Services.Implementations
                     },
                     rating = r.rating,
                     content = r.content,
+                    image = r.image?.ToString(),
                     created_at = r.created_at
                 }).ToList();
                 _logger.LogInformation("Đã lấy đánh giá sách với ID {BookId} thành công", bookId);
@@ -390,6 +416,7 @@ namespace book_shop.Services.Implementations
                     },
                     rating = r.rating,
                     content = r.content,
+                    image = r.image?.ToString(),
                     created_at = r.created_at
                 }).ToList();
                 _logger.LogInformation("Đã lấy đánh giá sách theo người dùng với ID {UserId} thành công", userId);
@@ -432,6 +459,10 @@ namespace book_shop.Services.Implementations
                     existingReview.rating = bookReview.rating;
                     existingReview.content = bookReview.content;
                     existingReview.created_at = DateTime.UtcNow;
+                    if(bookReview.image != null && bookReview.image.Length > 0)
+                    {
+                        existingReview.image = await _cloudService.UploadImageAsync(bookReview.image);
+                    }
                     await _bookReviewRepository.UpdateAsync(existingReview);
                     _logger.LogInformation("Đánh giá sách với ID {Id} đã được cập nhật thành công", bookReview.book_review_id);
                     return new

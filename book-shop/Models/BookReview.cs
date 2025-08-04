@@ -10,6 +10,7 @@ namespace book_shop.Models
         public int user_id { get; set; }
         public double rating { get; set; }
         public string? content { get; set; }
+        public string? image { get; set; }
         public DateTime created_at { get; set; }
         public Book book { get; set; }
         public User user { get; set; }
