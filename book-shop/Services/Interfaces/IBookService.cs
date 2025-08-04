@@ -15,5 +15,6 @@ namespace book_shop.Services.Interfaces
         Task<object> GetBooksByCategoryIdAsync(int categoryId);
         Task<object> GetBooksByPublisherAsync(string publisher);
         Task<object> GetBooksByTitleAsync(string title);
+        Task<object> GetTopProductsAsync(DateTime? startDate, DateTime? endDate);
     }
 }

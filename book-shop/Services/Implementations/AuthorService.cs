@@ -228,5 +228,36 @@ namespace book_shop.Services.Implementations
                 data = result
             };
         }
+
+        public async Task<object> GetAuthorByBook(int bookId)
+        {
+            try
+            {
+                var author = await _authorRepository.GetAuthorsByBookId(bookId);
+                if (author == null)
+                {
+                    return new
+                    {
+                        status = HttpStatusCode.NotFound,
+                        message = "Không tìm thấy sách của tác giả này."
+                    };
+                }
+                return new
+                {
+                    status = HttpStatusCode.OK,
+                    message = "Lấy sách của tác giả thành công.",
+                    data = author
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi xảy ra khi lấy sách của tác giả {bookId}", bookId);
+                return new
+                {
+                    status = HttpStatusCode.InternalServerError,
+                    message = "Lỗi xảy ra khi lấy sách của tác giả" + ex.Message
+                };
+            }
+        }
     }
 }

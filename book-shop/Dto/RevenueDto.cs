@@ -1,4 +1,5 @@
 ﻿using book_shop.Enums;
+using book_shop.Models;
 
 namespace book_shop.Dto
 {
@@ -32,6 +33,7 @@ namespace book_shop.Dto
         public int quantity_sold { get; set; }
         public int revenue { get; set; }
         public string image { get; set; }
+        public Author author { get; set; }
     }
     public class RevenueDto
     {

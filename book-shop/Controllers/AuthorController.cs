@@ -40,7 +40,7 @@ namespace book_shop.Controllers
         }
 
         [HttpPost("create-author")]
-        [Authorize(Roles ="admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> CreateAuthor([FromForm] AuthorDto author)
         {
             var createdAuthor = await _authorService.CreateAuthor(author);
@@ -61,6 +61,17 @@ namespace book_shop.Controllers
         {
             var deletedAuthor = await _authorService.DeleteAuthor(id);
             return Ok(deletedAuthor);
+        }
+
+        [HttpGet("get-author-books")]
+        public async Task<IActionResult> GetAuthorBooks(int bookId)
+        {
+            var books = await _authorService.GetAuthorByBook(bookId);
+            if (books == null)
+            {
+                return NotFound(new { message = "Không tìm thấy sách của tác giả này." });
+            }
+            return Ok(books);
         }
     }
 }

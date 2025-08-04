@@ -12,5 +12,6 @@ namespace book_shop.Services.Interfaces
         Task<object> CreateAuthor(AuthorDto author);
         Task<object> UpdateAuthor(int id, UpdateAuthorDto author);
         Task<object> DeleteAuthor(int id);
+        Task<object> GetAuthorByBook(int bookId);
     }
 }
