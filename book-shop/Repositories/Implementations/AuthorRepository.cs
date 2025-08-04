@@ -47,11 +47,10 @@ namespace book_shop.Repositories.Implementations
 
         public async Task<Author> GetAuthorsByBookId(int bookId)
         {
-            return await _context.Authors
-                .Include(a => a.books)
-                .Where(a => a.books.Any(b => b.book_id == bookId))
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
+            var book = await _context.Books.FindAsync(bookId);
+            var author = await _context.Authors
+                .FirstOrDefaultAsync(_ => _.author_id == book.author_id);
+            return author;
         }
 
         public async Task<Author> GetByIdAsync(int id)

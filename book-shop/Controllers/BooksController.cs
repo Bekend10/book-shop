@@ -69,7 +69,7 @@ namespace book_shop.Controllers
             {
                 return BadRequest("Thông tin chưa đầy đủ");
             }
-            var result = await _bookService.UpdateBookAsync(id , book);
+            var result = await _bookService.UpdateBookAsync(id, book);
             if (result == null)
             {
                 return NotFound();
@@ -119,6 +119,17 @@ namespace book_shop.Controllers
                 return NotFound();
             }
             return Ok(books);
+        }
+
+        [HttpGet("get-top-products")]
+        public async Task<IActionResult> GetTopProducts(DateTime? startDate, DateTime? endDate)
+        {
+            var topProducts = await _bookService.GetTopProductsAsync(startDate, endDate);
+            if (topProducts == null)
+            {
+                return NotFound(new { message = "Không tìm thấy sản phẩm nào." });
+            }
+            return Ok(topProducts);
         }
     }
 }

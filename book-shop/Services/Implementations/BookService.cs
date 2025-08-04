@@ -529,6 +529,39 @@ namespace book_shop.Services.Implementations
             }
         }
 
+        public async Task<object> GetTopProductsAsync(DateTime? startDate, DateTime? endDate)
+        {
+            try
+            {
+                var topProducts = await _bookRepository.GetTopProducts(startDate, endDate);
+                if (topProducts == null || !topProducts.Any())
+                {
+                    _logger.LogError("Không tìm thấy sản phẩm nào !");
+                    return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy sản phẩm nào !" };
+                }
+                foreach(var item in topProducts)
+                {
+                    var author = await _authorRepository.GetAuthorsByBookId(item.product_id);
+                    item.author = author;
+                }
+                return new
+                {
+                    status = HttpStatusCode.OK,
+                    msg = "Lấy danh sách sản phẩm thành công !",
+                    data = topProducts
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy sản phẩm !");
+                return new
+                {
+                    status = HttpStatusCode.InternalServerError,
+                    msg = "Xảy ra lỗi " + ex.Message,
+                };
+            }
+        }
+
         public async Task<object> UpdateBookAsync(int id, [FromForm] UpdateBookDto book)
         {
             try
