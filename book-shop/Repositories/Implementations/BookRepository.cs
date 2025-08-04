@@ -136,7 +136,8 @@ namespace book_shop.Repositories.Implementations
                     image = g.Select(x => x.book.image_url).FirstOrDefault(),
                     category_name = g.Select(x => x.book.category.name).FirstOrDefault(),
                     quantity_sold = g.Sum(x => x.quantity),
-                    revenue = g.Sum(x => x.quantity * x.book.price)
+                    revenue = g.Sum(x => x.quantity * x.book.price),
+                    author = g.Select(x => x.book.authors.FirstOrDefault()).FirstOrDefault(),
                 })
                 .OrderByDescending(tp => tp.quantity_sold)
                 .ToListAsync();
