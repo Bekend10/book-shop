@@ -59,7 +59,7 @@ namespace book_shop.Services.Implementations
                 switch (model.MethodId)
                 {
                     case 1: //COD
-                        newPayment.method_id = 0;
+                        newPayment.method_id = model.MethodId;
                         newPayment.payment_status = PaymentEnumStatus.Completed;
                         isOrderExisting.status = OrderEnumStatus.OrderStatus.Delivered;
                         await _paymentRepository.AddAsync(newPayment);
@@ -76,6 +76,7 @@ namespace book_shop.Services.Implementations
                         var vnpayResult = await _vnpayService.CreatePaymentUrl(paymentModel, httpContext);
                         if (vnpayResult == null)
                         {
+                            newPayment.method_id = model.MethodId;
                             newPayment.payment_status = PaymentEnumStatus.Failed;
                             await _paymentRepository.AddAsync(newPayment);
 

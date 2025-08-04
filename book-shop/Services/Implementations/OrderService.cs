@@ -109,49 +109,14 @@ namespace book_shop.Services.Implementations
                     };
                 }
 
-                #region validate order details
-                var isExistingBook = await _book.GetByIdAsync(order.book_id);
-                if (isExistingBook == null)
+                if (order.items == null || !order.items.Any())
                 {
-                    _logger.LogWarning("Sách với ID {BookId} không tồn tại.", order.book_id);
-                    return new
-                    {
-                        status = HttpStatusCode.NotFound,
-                        message = "Sách không tồn tại."
-                    };
-                }
-
-                if (isExistingBook.quantity < 0)
-                {
-                    _logger.LogWarning("Số lượng sách không đủ để tạo đơn hàng.");
                     return new
                     {
                         status = HttpStatusCode.BadRequest,
-                        message = "Số lượng sách không đủ để tạo đơn hàng."
+                        message = "Đơn hàng phải chứa ít nhất một sản phẩm."
                     };
                 }
-
-                if (order.quantity <= 0)
-                {
-                    _logger.LogWarning("Số lượng đặt hàng phải lớn hơn 0.");
-                    return new
-                    {
-                        status = HttpStatusCode.BadRequest,
-                        message = "Số lượng đặt hàng phải lớn hơn 0."
-                    };
-                }
-
-                if (order.quantity > isExistingBook.quantity)
-                {
-                    _logger.LogWarning("Số lượng đặt hàng vượt quá số lượng sách hiện có.");
-                    return new
-                    {
-                        status = HttpStatusCode.BadRequest,
-                        message = "Số lượng đặt hàng vượt quá số lượng sách hiện có."
-                    };
-                }
-
-                #endregion
 
                 var newOrder = new Order
                 {
@@ -163,22 +128,56 @@ namespace book_shop.Services.Implementations
                 };
 
                 await _orderRepository.AddAsync(newOrder);
-                _logger.LogInformation("Đơn hàng mới đã được tạo với ID: {OrderId}", newOrder.order_id);
 
-                var newOrderDetail = new OrderDetail
+                int totalAmount = 0;
+                var orderDetails = new List<OrderDetail>();
+
+                foreach (var item in order.items)
                 {
-                    order_id = newOrder.order_id,
-                    book_id = order.book_id,
-                    quantity = order.quantity,
-                    unit_price = isExistingBook.price
-                };
+                    var book = await _book.GetByIdAsync(item.book_id);
+                    if (book == null)
+                    {
+                        return new
+                        {
+                            status = HttpStatusCode.NotFound,
+                            message = $"Sách với ID {item.book_id} không tồn tại."
+                        };
+                    }
 
-                newOrder.total_amount = newOrderDetail.quantity * newOrderDetail.unit_price;
-                isExistingBook.quantity -= newOrderDetail.quantity;
-                isExistingBook.is_bn = isExistingBook.quantity <= 0 ? 0 : 1;
+                    if (item.quantity <= 0 || item.quantity > book.quantity)
+                    {
+                        return new
+                        {
+                            status = HttpStatusCode.BadRequest,
+                            message = $"Số lượng không hợp lệ cho sách {book.title}."
+                        };
+                    }
 
-                await _book.UpdateAsync(isExistingBook);
-                await _orderDetailRepository.AddAsync(newOrderDetail);
+                    // Tạo chi tiết đơn hàng
+                    var detail = new OrderDetail
+                    {
+                        order_id = newOrder.order_id,
+                        book_id = item.book_id,
+                        quantity = item.quantity,
+                        unit_price = book.price
+                    };
+
+                    orderDetails.Add(detail);
+
+                    // Trừ tồn kho
+                    book.quantity -= item.quantity;
+                    book.is_bn = book.quantity <= 0 ? 0 : 1;
+                    await _book.UpdateAsync(book);
+
+                    totalAmount += detail.quantity * detail.unit_price;
+                }
+
+                foreach (var detail in orderDetails)
+                {
+                    await _orderDetailRepository.AddAsync(detail);
+                }
+
+                newOrder.total_amount = totalAmount;
                 await _orderRepository.UpdateAsync(newOrder);
 
                 _logger.LogInformation("Đơn hàng đã được tạo thành công với ID: {OrderId}", newOrder.order_id);
@@ -186,6 +185,7 @@ namespace book_shop.Services.Implementations
                 {
                     status = HttpStatusCode.Created,
                     message = "Đơn hàng đã được tạo thành công.",
+                    order_id = newOrder.order_id
                 };
             }
             catch (Exception ex)
@@ -215,55 +215,64 @@ namespace book_shop.Services.Implementations
                 }
 
                 var cart = await _cartRepository.GetCartByUserIdAsync(userId);
-                if (cart == null)
+                if (cart == null || cart.items == null || !cart.items.Any())
                 {
-                    _logger.LogWarning("Giỏ hàng không tồn tại cho người dùng với ID {UserId}.", userId);
+                    _logger.LogWarning("Giỏ hàng không tồn tại hoặc không có sản phẩm.");
                     return new
                     {
                         status = HttpStatusCode.NotFound,
-                        message = "Giỏ hàng không tồn tại."
+                        message = "Giỏ hàng không tồn tại hoặc không có sản phẩm."
                     };
                 }
 
-                var book = await _book.GetByIdAsync(cart.items.Select(x => x.book_id).First());
-                if (book == null)
-                {
-                    _logger.LogWarning("Sách với ID {BookId} không tồn tại.", cart.book_id);
-                    return new
-                    {
-                        status = HttpStatusCode.NotFound,
-                        message = "Sách không tồn tại."
-                    };
-                }
+                var totalAmount = 0;
+                var orderDetails = new List<OrderDetail>();
 
-                if (book.quantity <= 0)
+                foreach (var cartItem in cart.items)
                 {
-                    _logger.LogWarning("Số lượng sách không đủ để tạo đơn hàng.");
-                    return new
+                    var book = await _book.GetByIdAsync(cartItem.book_id);
+                    if (book == null)
                     {
-                        status = HttpStatusCode.BadRequest,
-                        message = "Số lượng sách không đủ để tạo đơn hàng."
-                    };
-                }
+                        _logger.LogWarning("Sách với ID {BookId} không tồn tại.", cartItem.book_id);
+                        return new
+                        {
+                            status = HttpStatusCode.NotFound,
+                            message = $"Sách với ID {cartItem.book_id} không tồn tại."
+                        };
+                    }
 
-                if (cart.quantity <= 0)
-                {
-                    _logger.LogWarning("Số lượng đặt hàng phải lớn hơn 0.");
-                    return new
+                    if (cartItem.quantity <= 0)
                     {
-                        status = HttpStatusCode.BadRequest,
-                        message = "Số lượng đặt hàng phải lớn hơn 0."
-                    };
-                }
+                        _logger.LogWarning("Số lượng đặt hàng phải lớn hơn 0.");
+                        return new
+                        {
+                            status = HttpStatusCode.BadRequest,
+                            message = $"Số lượng sách {book.title} phải lớn hơn 0."
+                        };
+                    }
 
-                if (cart.quantity > book.quantity)
-                {
-                    _logger.LogWarning("Số lượng đặt hàng vượt quá số lượng sách hiện có.");
-                    return new
+                    if (cartItem.quantity > book.quantity)
                     {
-                        status = HttpStatusCode.BadRequest,
-                        message = "Số lượng đặt hàng vượt quá số lượng sách hiện có."
+                        _logger.LogWarning("Số lượng đặt hàng vượt quá số lượng sách hiện có.");
+                        return new
+                        {
+                            status = HttpStatusCode.BadRequest,
+                            message = $"Sách '{book.title}' không đủ số lượng trong kho."
+                        };
+                    }
+
+                    var orderDetail = new OrderDetail
+                    {
+                        book_id = book.book_id,
+                        quantity = cartItem.quantity,
+                        unit_price = book.price
                     };
+
+                    totalAmount += cartItem.quantity * book.price;
+                    orderDetails.Add(orderDetail);
+
+                    book.quantity -= cartItem.quantity;
+                    await _book.UpdateAsync(book);
                 }
 
                 var newOrder = new Order
@@ -272,33 +281,28 @@ namespace book_shop.Services.Implementations
                     method_id = order.method_id,
                     order_date = DateTime.Now,
                     status = OrderEnumStatus.OrderStatus.Pending,
-                    total_amount = cart.quantity * book.price
+                    total_amount = totalAmount
                 };
 
                 await _orderRepository.AddAsync(newOrder);
                 _logger.LogInformation("Đơn hàng mới đã được tạo với ID: {OrderId}", newOrder.order_id);
 
-                var newOrderDetail = new OrderDetail
+                foreach (var detail in orderDetails)
                 {
-                    order_id = newOrder.order_id,
-                    book_id = book.book_id,
-                    quantity = cart.quantity,
-                    unit_price = book.price
-                };
+                    detail.order_id = newOrder.order_id;
+                    await _orderDetailRepository.AddAsync(detail);
+                }
 
-                book.quantity -= cart.quantity;
-                await _book.UpdateAsync(book);
-                await _orderDetailRepository.AddAsync(newOrderDetail);
+                await _cartDetailRepository.DeleteAsync(cart.cart_id); 
+                await _cartRepository.DeleteAsync(cart.cart_id);      
 
-                await _cartDetailRepository.DeleteAsync(cart.cart_id); // Hàm xóa toàn bộ chi tiết giỏ hàng theo giỏ
-                await _cartRepository.DeleteAsync(cart.cart_id);
-
-                _logger.LogInformation("Giỏ hàng và chi tiết giỏ hàng đã được xóa sau khi tạo đơn hàng với ID: {OrderId}", newOrder.order_id);
+                _logger.LogInformation("Giỏ hàng đã được xóa sau khi tạo đơn hàng với ID: {OrderId}", newOrder.order_id);
 
                 return new
                 {
                     status = HttpStatusCode.Created,
-                    message = "Đơn hàng đã được tạo thành công."
+                    message = "Đơn hàng đã được tạo thành công.",
+                    order_id = newOrder.order_id
                 };
             }
             catch (Exception ex)
