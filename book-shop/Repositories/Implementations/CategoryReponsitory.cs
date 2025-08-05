@@ -110,9 +110,9 @@ namespace book_shop.Repositories.Implementations
                 .Include(od => od.order)
                     .ThenInclude(o => o.Payment)
                 .Where(od =>
-                    od.order.status == OrderStatus.Delivered &&
-                    od.order.Payment != null &&
-                    od.order.status == OrderStatus.Delivered
+                    od.order.status == OrderStatus.Delivered ||
+                    od.order.status == OrderStatus.Shipped &&
+                    od.order.Payment != null
                 );
 
             if (startDate.HasValue)
