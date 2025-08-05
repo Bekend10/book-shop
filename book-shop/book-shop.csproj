@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="EPPlus" Version="8.0.6" />
     <PackageReference Include="Google.Apis.Auth" Version="1.70.0" />
     <PackageReference Include="MailKit" Version="4.11.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
@@ -32,6 +33,7 @@
     <Folder Include="EmailTemplates\Orders\" />
     <Folder Include="Extensions\" />
     <Folder Include="Constants\" />
+    <Folder Include="Resources\Excel\" />
     <Folder Include="Validations\" />
     <Folder Include="Queries\" />
     <Folder Include="UnitOfWork\" />
@@ -39,6 +41,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\cloudinary-service\cloudinary-service.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Resources\Excel\OrdersReport.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

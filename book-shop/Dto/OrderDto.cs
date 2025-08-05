@@ -64,4 +64,9 @@ namespace book_shop.Dto
         public int unit_price { get; set; }
     }
 
+    public class OrderRequestModel
+    {
+        public DateTime? startDate { get; set; }
+        public DateTime? endDate { get; set; }
+    }
 }

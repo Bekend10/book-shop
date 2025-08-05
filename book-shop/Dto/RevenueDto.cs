@@ -30,6 +30,7 @@ namespace book_shop.Dto
         public int product_id { get; set; }
         public string name { get; set; }
         public string category_name { get; set; }
+        public int total_quantity { get; set; }
         public int quantity_sold { get; set; }
         public int revenue { get; set; }
         public string image { get; set; }

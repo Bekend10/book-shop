@@ -7,7 +7,6 @@ using book_shop.Repositories.Implementations;
 using book_shop.Repositories.Interfaces;
 using book_shop.Services.Implementations;
 using book_shop.Services.Interfaces;
-using cloudinary_service.Models;
 using cloudinary_service.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -63,6 +62,7 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IBookReviewRepository, BookReviewRepository>();
 builder.Services.AddScoped<IBookReviewService, BookReviewService>();
 builder.Services.AddScoped<IRevenueService, RevenueService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 builder.Services.AddHttpClient("CloudinaryService", client =>
 {
