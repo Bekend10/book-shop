@@ -34,6 +34,9 @@ namespace book_shop.Repositories.Implementations
         public async Task<IEnumerable<Order>> GetAllAsync()
         {
             var orders = await _context.Orders
+                .Include(x => x.User)
+                .Include(x => x.orderDetail)
+                .ThenInclude(od => od.book)
                 .Select(o => new Order
                 {
                     order_id = o.order_id,
@@ -41,7 +44,16 @@ namespace book_shop.Repositories.Implementations
                     order_date = o.order_date,
                     total_amount = o.total_amount,
                     method_id = o.method_id,
-                    status = o.status
+                    status = o.status,
+                    User = new User
+                    {
+                        user_id = o.User.user_id,
+                        first_name = o.User.first_name,
+                        last_name = o.User.last_name,
+                        email = o.User.email,
+                        phone_number = o.User.phone_number
+                    },
+                    orderDetail = o.orderDetail
                 }).ToListAsync();
             return orders;
         }
@@ -164,7 +176,7 @@ namespace book_shop.Repositories.Implementations
                 created_at = o.order_date,
                 status = o.status.ToString(),
                 total_amount = o.total_amount
-            }).ToList();
+            }).OrderByDescending(_ => _.created_at).ToList();
             return listOrderDto;
         }
 

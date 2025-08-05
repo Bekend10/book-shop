@@ -115,7 +115,7 @@ namespace book_shop.Repositories.Implementations
                 .Include(od => od.book)
                 .ThenInclude(b => b.category)
                 .Include(od => od.order)
-                .Where(od => od.order.status == Enums.OrderEnumStatus.OrderStatus.Delivered);
+                .Where(od => od.order.status == Enums.OrderEnumStatus.OrderStatus.Delivered || od.order.status == Enums.OrderEnumStatus.OrderStatus.Processing);
 
             if (startDate.HasValue)
             {
@@ -137,6 +137,7 @@ namespace book_shop.Repositories.Implementations
                     category_name = g.Select(x => x.book.category.name).FirstOrDefault(),
                     quantity_sold = g.Sum(x => x.quantity),
                     revenue = g.Sum(x => x.quantity * x.book.price),
+                    total_quantity = g.Select(x => x.book.quantity).FirstOrDefault(),
                     author = g.Select(x => x.book.authors.FirstOrDefault()).FirstOrDefault(),
                 })
                 .OrderByDescending(tp => tp.quantity_sold)
