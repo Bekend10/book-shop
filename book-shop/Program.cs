@@ -11,9 +11,16 @@ using cloudinary_service.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = builder.Configuration.GetValue<string>("Redis:ConnectionString");
+    return ConnectionMultiplexer.Connect(configuration);
+});
 
 builder.Services.AddControllers();
 Console.OutputEncoding = System.Text.Encoding.UTF8;
@@ -63,6 +70,7 @@ builder.Services.AddScoped<IBookReviewRepository, BookReviewRepository>();
 builder.Services.AddScoped<IBookReviewService, BookReviewService>();
 builder.Services.AddScoped<IRevenueService, RevenueService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
 
 builder.Services.AddHttpClient("CloudinaryService", client =>
 {

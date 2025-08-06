@@ -1,4 +1,5 @@
-﻿using book_shop.Dto;
+﻿using book_shop.Commons.CacheKey;
+using book_shop.Dto;
 using book_shop.Helpers.UserHelper;
 using book_shop.Models;
 using book_shop.Repositories.Interfaces;
@@ -13,12 +14,14 @@ namespace book_shop.Services.Implementations
         private readonly IBookRepository _bookRepository;
         private readonly ILogger<CategoryService> _logger;
         private readonly UserHelper _userHelper;
-        public CategoryService(ICategoryRepository categoryRepository, ILogger<CategoryService> logger, UserHelper userHelper, IBookRepository bookRepository)
+        private readonly IRedisCacheService _redisCacheService;
+        public CategoryService(ICategoryRepository categoryRepository, ILogger<CategoryService> logger, UserHelper userHelper, IBookRepository bookRepository, IRedisCacheService redisCacheService)
         {
             _categoryRepository = categoryRepository;
             _logger = logger;
             _userHelper = userHelper;
             _bookRepository = bookRepository;
+            _redisCacheService = redisCacheService;
         }
         public async Task<object> AddCategoryAsync(CategoryDto category)
         {
@@ -30,7 +33,7 @@ namespace book_shop.Services.Implementations
                     _logger.LogInformation("Thêm danh mục {category} thất bại vì không tìm thấy người dùng !", category.name);
                     return new { status = HttpStatusCode.BadRequest, message = "Không tìm thấy người dùng !" };
                 }
-
+                
                 var isExist = await _categoryRepository.GetCategoryByNameAsync(category.name);
                 if(isExist != null)
                 {
@@ -46,6 +49,9 @@ namespace book_shop.Services.Implementations
                     created_by = userID,
                 };
                 await _categoryRepository.AddAsync(newCategory);
+
+                await _redisCacheService.RemoveAsync(CategoryCacheKeys.GetAllCategories);
+
                 _logger.LogInformation("Thêm danh mục {category} thành công !", category.name);
                 return new { status = HttpStatusCode.Created, message = "Thêm danh mục thành công !" };
             }
@@ -63,11 +69,20 @@ namespace book_shop.Services.Implementations
                 return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy danh mục !" };
             }
             await _categoryRepository.DeleteAsync(id);
+
+            await _redisCacheService.RemoveAsync(CategoryCacheKeys.GetAllCategories);
+
             return new { status = HttpStatusCode.OK, msg = "Xóa danh mục thành công !" };
         }
 
         public async Task<object> GetAllCategoriesAsync()
         {
+            var cached = await _redisCacheService.GetAsync<List<CategoryDto>>(CategoryCacheKeys.GetAllCategories);
+            if (cached != null)
+            {
+                _logger.LogInformation("Lấy danh sách danh mục từ cache thành công !");
+                return new { status = HttpStatusCode.OK, msg = "Lấy danh sách danh mục thành công !", data = cached };
+            }
             var result = await _categoryRepository.GetAllAsync();
             if (result == null)
             {
@@ -82,11 +97,14 @@ namespace book_shop.Services.Implementations
                 created_at = c.created_at,
                 created_by = c.created_by
             }).ToList();
+
             foreach (var item in categoryRespone)
             {
                 var bookList = await _bookRepository.GetBooksByCategoryIdAsync(item.category_id);
                 item.book_count = bookList.Count();
             }
+
+            await _redisCacheService.SetAsync(CategoryCacheKeys.GetAllCategories, categoryRespone, TimeSpan.FromMinutes(30));
 
             _logger.LogInformation("Lấy danh sách danh mục thành công !");
             return new {status = HttpStatusCode.OK, msg = "Lấy danh sách danh mục thành công !" ,data = categoryRespone };
@@ -118,6 +136,7 @@ namespace book_shop.Services.Implementations
             cate.description = category.description;
             await _categoryRepository.UpdateAsync(cate);
             _logger.LogInformation("Cập nhật danh mục {category} thành công !", category.name);
+            await _redisCacheService.RemoveAsync(CategoryCacheKeys.GetAllCategories);   
             return new { status = HttpStatusCode.OK, msg = "Cập nhật danh mục thành công !" };
         }
     }
