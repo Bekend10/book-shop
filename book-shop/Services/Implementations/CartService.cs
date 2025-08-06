@@ -1,4 +1,5 @@
-﻿using book_shop.Dto;
+﻿using book_shop.Commons.CacheKey;
+using book_shop.Dto;
 using book_shop.Helpers.UserHelper;
 using book_shop.Models;
 using book_shop.Repositories.Interfaces;
@@ -15,8 +16,9 @@ namespace book_shop.Services.Implementations
         private readonly IAuthorRepository _authorRepository;
         private readonly ILogger<CartService> _logger;
         private readonly UserHelper _userHelper;
+        private readonly IRedisCacheService _cacheService;
 
-        public CartService(ICartRepository cartRepository, ILogger<CartService> logger, IBookRepository bookRepository, UserHelper userHelper, ICartDetailRepository cartDetailRepository, IAuthorRepository authorRepository)
+        public CartService(ICartRepository cartRepository, ILogger<CartService> logger, IBookRepository bookRepository, UserHelper userHelper, ICartDetailRepository cartDetailRepository, IAuthorRepository authorRepository, IRedisCacheService cacheService)
         {
             _cartRepository = cartRepository;
             _logger = logger;
@@ -24,6 +26,7 @@ namespace book_shop.Services.Implementations
             _userHelper = userHelper;
             _cartDetailRepository = cartDetailRepository;
             _authorRepository = authorRepository;
+            _cacheService = cacheService;
         }
 
         public async Task<object> AddToCartAsync(AddToCartDto dto)
@@ -70,9 +73,7 @@ namespace book_shop.Services.Implementations
                     };
                     await _cartDetailRepository.AddAsync(cartDetail);
                 }
-
-
-
+                await _cacheService.RemoveAsync(CartCacheKeys.myCart(userId));
 
                 return new { status = HttpStatusCode.OK, msg = "Thêm sách vào giỏ hàng thành công !" };
             }
@@ -117,7 +118,18 @@ namespace book_shop.Services.Implementations
                     };
                 }
 
-                var cart = await _cartRepository.GetCartByUserIdAsync(userId);
+                var cached = await _cacheService.GetAsync<CartDto>(CartCacheKeys.myCart(userId));
+                if (cached != null)
+                {
+                    return new
+                    {
+                        status = HttpStatusCode.OK,
+                        msg = "Lấy chi tiết giỏ hàng thành công từ cache",
+                        data = cached
+                    };
+                }
+
+                    var cart = await _cartRepository.GetCartByUserIdAsync(userId);
                 if (cart == null)
                 {
                     return new
@@ -162,6 +174,8 @@ namespace book_shop.Services.Implementations
                     }).ToList()
                 };
 
+                // Lưu vào cache
+                await _cacheService.SetAsync(CartCacheKeys.myCart(userId), cartDto, TimeSpan.FromDays(1));
 
                 return new
                 {
@@ -315,7 +329,7 @@ namespace book_shop.Services.Implementations
                     updated_at = cart.updated_at
                 };
                 await _cartRepository.UpdateAsync(newCart);
-
+                await _cacheService.RemoveAsync(CartCacheKeys.myCart(userId));
                 return new { status = HttpStatusCode.OK, msg = "Cập nhật thành công" };
             }
             catch (Exception ex)
