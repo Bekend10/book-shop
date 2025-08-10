@@ -13,7 +13,7 @@ namespace book_shop.Services.Implementations
         private readonly IAddressRepository _addressRepository;
         private readonly IAccountRepository _accountRepository;
 
-        public UserService(IUserRepository userRepository, IAddressRepository addressRepository, IAccountRepository accountRepository = null)
+        public UserService(IUserRepository userRepository, IAddressRepository addressRepository, IAccountRepository accountRepository)
         {
             _userRepository = userRepository;
             _addressRepository = addressRepository;
@@ -25,7 +25,6 @@ namespace book_shop.Services.Implementations
         public async Task<object> GetByIdAsync(int id)
         {
             var user = await _userRepository.GetByIdAsync(id);
-            var account = await _accountRepository.GetAccountByEmailAsync(user.email);
             if (user == null)
             {
                 return new
@@ -34,6 +33,7 @@ namespace book_shop.Services.Implementations
                     msg = "Không tìm thấy người dùng!"
                 };
             }
+            var account = await _accountRepository.GetAccountByEmailAsync(user.email);
             var address = await _addressRepository.GetByIdAsync(user.address_id);
             if (address != null)
             {

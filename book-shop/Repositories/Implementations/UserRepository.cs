@@ -91,7 +91,7 @@ namespace book_shop.Repositories.Implementations
         public async Task<User> GetByIdAsync(int id)
         {
             return await _context.Users
-                .FirstAsync(x => x.user_id == id);
+                .FirstOrDefaultAsync(x => x.user_id == id);
         }
 
         public async Task<int> GetCurrentUserIdAsync()

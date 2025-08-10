@@ -25,7 +25,7 @@ namespace book_shop.Services.Implementations
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly HttpClient _httpClient;
 
-        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository, IConfiguration configuration, IAddressRepository addressRepository, IServiceScopeFactory scopeFactory = null, HttpClient httpClient = null)
+        public AccountService(IAccountRepository accountRepository, IJWTService jwtService, ILogger<AccountService> logger, IEmailService emailService, IUserRepository userRepository, IConfiguration configuration, IAddressRepository addressRepository, IServiceScopeFactory scopeFactory, HttpClient httpClient)
         {
             _accountRepository = accountRepository;
             _jwtService = jwtService;
