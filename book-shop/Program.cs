@@ -11,11 +11,15 @@ using cloudinary_service.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using OfficeOpenXml;
 using StackExchange.Redis;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Cấu hình license cho EPPlus (NonCommercial)
+ExcelPackage.License.SetNonCommercialPersonal("Nguyen Tien Dung");
+// Redis config
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
     var configuration = builder.Configuration.GetValue<string>("Redis:ConnectionString");
@@ -23,20 +27,19 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 });
 
 builder.Services.AddControllers();
-Console.OutputEncoding = System.Text.Encoding.UTF8;
-// Add services to the container
+Console.OutputEncoding = Encoding.UTF8;
+
+// Database config
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddHttpContextAccessor();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
 
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IJWTService, JWTService>();
-builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<EmailTemplateLoader>();
 builder.Services.AddScoped<UserHelper>();
@@ -113,7 +116,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnChallenge = context =>
             {
-                context.HandleResponse(); 
+                context.HandleResponse();
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 context.Response.ContentType = "application/json";
                 return context.Response.WriteAsync("{\"message\": \"Chưa đăng nhập hoặc token không hợp lệ.\"}");
@@ -127,8 +130,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-
-// Configure Swagger to use JWT authentication
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Book Shop API", Version = "v1" });
@@ -159,12 +160,10 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
 var app = builder.Build();
 
-// Use CORS middleware
 app.UseCors("AllowAll");
 
 app.UseMiddleware<RequestLoggingMiddleware>();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -172,8 +171,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseAuthentication();   
-app.UseAuthorization();   
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 app.MapDefaultControllerRoute();
 
