@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 namespace book_shop.Controllers
 {
@@ -130,6 +131,36 @@ namespace book_shop.Controllers
                 return NotFound(new { message = "Không tìm thấy sản phẩm nào." });
             }
             return Ok(topProducts);
+        }
+
+        [HttpPost("import-books-from-excel")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> ImportBooksFromExcel(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("File không hợp lệ.");
+
+            var result = await _bookService.ImportBooksFromExcelAsync(file);
+
+            return Ok(new
+            {
+                status = HttpStatusCode.OK,
+                msg = "Nhập sách thành công.",
+                totalProcessed = result.TotalProcessed,
+                successCount = result.SuccessCount,
+                errorCount = result.ErrorCount
+            });
+        }
+
+        [HttpGet("excel-template")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> GetBooksImportTemplate()
+        {
+            var fileBytes = await _bookService.GetBooksImportTemplateAsync();
+            var fileName = "BooksImportTemplate.xlsx";
+            var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+            return File(fileBytes, contentType, fileName);
         }
     }
 }

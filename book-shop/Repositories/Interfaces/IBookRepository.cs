@@ -12,5 +12,6 @@ namespace book_shop.Repositories.Interfaces
         Task<IEnumerable<Book>> GetBooksByTitleAsync(string title);
         Task<List<TopProductDto>> GetTopProducts(DateTime? startDate, DateTime? endDate);
         Task<List<Book>> GetByIdsAsync(IEnumerable<int> bookIds);
+        Task<bool> ImportBookByExcel(List<AddBookByExcelModel> books);
     }
 }

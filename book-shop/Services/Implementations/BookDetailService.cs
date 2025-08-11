@@ -24,7 +24,7 @@ namespace book_shop.Services.Implementations
         {
             try
             {
-                var newBookDetail = new BookDetail
+                var newBookDetail = new Models.BookDetail
                 {
                     book_id = bookDetailDto.book_id,
                     description = bookDetailDto.description,
