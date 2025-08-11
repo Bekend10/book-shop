@@ -4,6 +4,8 @@ using book_shop.Models;
 using book_shop.Repositories.Interfaces;
 using book_shop.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using OfficeOpenXml;
+using System.ComponentModel;
 using System.Net;
 
 namespace book_shop.Services.Implementations
@@ -17,7 +19,9 @@ namespace book_shop.Services.Implementations
         private readonly ILogger<BookService> _logger;
         private readonly ICloudService _cloudService;
         private readonly IRedisCacheService _cache;
-        public BookService(IBookRepository bookService, ILogger<BookService> logger, ICloudService cloudService, IBookDetailRepository bookDetailRepository, IAuthorRepository authorRepository, ICategoryRepository categoryRepository, IRedisCacheService cache)
+        private readonly IWebHostEnvironment _env;
+
+        public BookService(IBookRepository bookService, ILogger<BookService> logger, ICloudService cloudService, IBookDetailRepository bookDetailRepository, IAuthorRepository authorRepository, ICategoryRepository categoryRepository, IRedisCacheService cache, IWebHostEnvironment env)
         {
             _bookRepository = bookService;
             _logger = logger;
@@ -26,6 +30,7 @@ namespace book_shop.Services.Implementations
             _authorRepository = authorRepository;
             _categoryRepository = categoryRepository;
             _cache = cache;
+            _env = env;
         }
 
         public async Task<object> AddBook([FromForm] AddBookDto book)
@@ -68,7 +73,7 @@ namespace book_shop.Services.Implementations
 
                 await _bookRepository.AddAsync(newBook);
 
-                var bookDetail = new BookDetail
+                var bookDetail = new Models.BookDetail
                 {
                     book_id = newBook.book_id,
                     description = book.description,
@@ -595,6 +600,16 @@ namespace book_shop.Services.Implementations
             }
         }
 
+        public async Task<byte[]> GetBooksImportTemplateAsync()
+        {
+            var filePath = Path.Combine(_env.ContentRootPath, "Resources", "Excel", "BooksImportTemplate.xlsx");
+
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException("Template file not found", filePath);
+
+            return await File.ReadAllBytesAsync(filePath);
+        }
+
         public async Task<object> GetTopProductsAsync(DateTime? startDate, DateTime? endDate)
         {
             try
@@ -626,6 +641,82 @@ namespace book_shop.Services.Implementations
                     msg = "Xảy ra lỗi " + ex.Message,
                 };
             }
+        }
+
+        public async Task<ImportBooksResult> ImportBooksFromExcelAsync(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                throw new Exception("File Excel không hợp lệ.");
+
+            var result = new ImportBooksResult();
+            var books = new List<AddBookByExcelModel>();
+
+            using (var stream = new MemoryStream())
+            {
+                await file.CopyToAsync(stream);
+                stream.Position = 0;
+
+                using (var package = new ExcelPackage(stream))
+                {
+                    var worksheet = package.Workbook.Worksheets[0]; // Sheet đầu tiên
+                    if (worksheet == null)
+                        throw new Exception("Không tìm thấy sheet trong file Excel.");
+
+                    int rowCount = worksheet.Dimension.Rows;
+
+                    for (int row = 2; row <= rowCount; row++)
+                    {
+                        // Bỏ qua nếu cột Title trống
+                        if (string.IsNullOrWhiteSpace(worksheet.Cells[row, 1].Text))
+                            continue;
+
+                        result.TotalProcessed++;
+
+                        try
+                        {
+                            var book = new AddBookByExcelModel
+                            {
+                                title = worksheet.Cells[row, 1].Text.Trim(),
+                                publisher_year = DateTime.TryParse(worksheet.Cells[row, 2].Text.Trim(), out var pubYear) ? pubYear : DateTime.MinValue,
+                                publisher = worksheet.Cells[row, 3].Text.Trim(),
+                                image_url = worksheet.Cells[row, 4].Text.Trim(),
+                                is_bn = int.TryParse(worksheet.Cells[row, 5].Text.Trim(), out var isBn) ? isBn : 0,
+                                quantity = int.TryParse(worksheet.Cells[row, 6].Text.Trim(), out var qty) ? qty : 0,
+                                price = int.TryParse(worksheet.Cells[row, 7].Text.Trim(), out var priceVal) ? priceVal : 0,
+                                price_origin = int.TryParse(worksheet.Cells[row, 8].Text.Trim(), out var priceOrigin) ? priceOrigin : 0,
+                                created_at = DateTime.TryParse(worksheet.Cells[row, 9].Text.Trim(), out var createdAt) ? createdAt : DateTime.Now,
+                                author_name = worksheet.Cells[row, 10].Text.Trim(),
+                                category_name = worksheet.Cells[row, 11].Text.Trim(),
+                                bookDetail = new Dto.BookDetail
+                                {
+                                    description = worksheet.Cells[row, 12].Text.Trim(),
+                                    file_demo_url = worksheet.Cells[row, 13].Text.Trim(),
+                                    language = worksheet.Cells[row, 14].Text.Trim(),
+                                    number_of_page = int.TryParse(worksheet.Cells[row, 15].Text.Trim(), out var numPage) ? numPage : 0,
+                                    create_at = DateTime.TryParse(worksheet.Cells[row, 9].Text.Trim(), out var created) ? created : DateTime.Now,
+                                    price = int.TryParse(worksheet.Cells[row, 7].Text.Trim(), out var price) ? price : 0,
+                                    quantity = int.TryParse(worksheet.Cells[row, 6].Text.Trim(), out var qt) ? qt : 0,
+                                    price_origin = int.TryParse(worksheet.Cells[row, 8].Text.Trim(), out var priceOri) ? priceOri : 0,
+                                }
+                            };
+
+                            books.Add(book);
+                            result.SuccessCount++;
+                        }
+                        catch
+                        {
+                            result.ErrorCount++;
+                        }
+                    }
+                }
+            }
+
+            await _cache.RemoveAsync(BookCacheKeys._bookList);
+
+            // Nếu repository có trả kết quả thì có thể dùng để xác nhận successCount
+            await _bookRepository.ImportBookByExcel(books);
+
+            return result;
         }
 
         public async Task<object> UpdateBookAsync(int id, [FromForm] UpdateBookDto book)

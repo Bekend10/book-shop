@@ -16,5 +16,7 @@ namespace book_shop.Services.Interfaces
         Task<object> GetBooksByPublisherAsync(string publisher);
         Task<object> GetBooksByTitleAsync(string title);
         Task<object> GetTopProductsAsync(DateTime? startDate, DateTime? endDate);
+        Task<ImportBooksResult> ImportBooksFromExcelAsync(IFormFile file);
+        Task<byte[]> GetBooksImportTemplateAsync();
     }
 }

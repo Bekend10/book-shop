@@ -82,7 +82,7 @@ namespace book_shop.Repositories.Implementations
                 .ToListAsync();
             return books;
         }
-       
+
         public async Task<IEnumerable<Book>> GetBooksByTitleAsync(string title)
         {
             var books = await _context.Books
@@ -146,6 +146,134 @@ namespace book_shop.Repositories.Implementations
             return result;
         }
 
+        public async Task<bool> ImportBookByExcel(List<AddBookByExcelModel> books)
+        {
+            if (books == null || books.Count == 0)
+                return false;
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                foreach (var book in books)
+                {
+                    if (string.IsNullOrWhiteSpace(book.author_name) || string.IsNullOrWhiteSpace(book.category_name))
+                        continue; // bỏ qua nếu thiếu dữ liệu bắt buộc
+
+                    // Lấy hoặc tạo author
+                    var author = await _context.Authors
+                        .FirstOrDefaultAsync(a => a.name == book.author_name);
+                    if (author == null)
+                    {
+                        author = new Author { name = book.author_name };
+                        _context.Authors.Add(author);
+                    }
+
+                    // Lấy hoặc tạo category
+                    var category = await _context.Categories
+                        .FirstOrDefaultAsync(c => c.name == book.category_name);
+                    if (category == null)
+                    {
+                        category = new Category { name = book.category_name };
+                        _context.Categories.Add(category);
+                    }
+
+                    await _context.SaveChangesAsync(); // lưu author/category mới để có ID
+
+                    // Kiểm tra book đã tồn tại chưa
+                    var existingBook = await _context.Books
+                        .Include(b => b.bookDetail)
+                        .FirstOrDefaultAsync(b => b.title == book.title
+                            && b.publisher_year == book.publisher_year
+                            && b.publisher == book.publisher);
+
+                    if (existingBook != null)
+                    {
+                        // Update book
+                        existingBook.quantity += book.quantity;
+                        existingBook.price = book.price;
+                        existingBook.price_origin = book.price_origin;
+                        existingBook.image_url = book.image_url;
+                        existingBook.created_at = book.created_at;
+                        existingBook.author_id = author.author_id;
+                        existingBook.category_id = category.category_id;
+
+                        if (existingBook.bookDetail != null)
+                        {
+                            existingBook.bookDetail.description = book.bookDetail.description;
+                            existingBook.bookDetail.file_demo_url = book.bookDetail.file_demo_url;
+                            existingBook.bookDetail.language = book.bookDetail.language;
+                            existingBook.bookDetail.number_of_page = book.bookDetail.number_of_page;
+                        }
+                        else
+                        {
+                            existingBook.bookDetail = new Models.BookDetail
+                            {
+                                description = book.bookDetail.description,
+                                file_demo_url = book.bookDetail.file_demo_url,
+                                language = book.bookDetail.language,
+                                number_of_page = book.bookDetail.number_of_page,
+                                create_at = book.created_at,
+                                publisher_year = book.publisher_year,
+                                publisher = book.publisher,
+                                price = book.price,
+                                image_url = book.image_url,
+                                is_bn = book.is_bn,
+                                quantity = book.quantity,
+                                price_origin = book.price_origin
+                            };
+                        }
+
+                        _context.Books.Update(existingBook);
+                        _context.BookDetails.Update(existingBook.bookDetail);
+                    }
+                    else
+                    {
+                        // Add new book
+                        var newBook = new Book
+                        {
+                            title = book.title,
+                            publisher_year = book.publisher_year,
+                            publisher = book.publisher,
+                            image_url = book.image_url,
+                            is_bn = book.is_bn,
+                            quantity = book.quantity,
+                            price = book.price,
+                            price_origin = book.price_origin,
+                            created_at = book.created_at,
+                            author_id = author.author_id,
+                            category_id = category.category_id,
+                            bookDetail = new Models.BookDetail
+                            {
+                                description = book.bookDetail.description,
+                                file_demo_url = book.bookDetail.file_demo_url,
+                                language = book.bookDetail.language,
+                                number_of_page = book.bookDetail.number_of_page,
+                                create_at = book.created_at,
+                                publisher_year = book.publisher_year,
+                                publisher = book.publisher,
+                                price = book.price,
+                                image_url = book.image_url,
+                                is_bn = book.is_bn,
+                                quantity = book.quantity,
+                                price_origin = book.price_origin
+                            }
+                        };
+
+                        _context.Books.Add(newBook);
+                        _context.BookDetails.Add(newBook.bookDetail);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                return false;
+            }
+        }
 
         public async Task UpdateAsync(Book entity)
         {
