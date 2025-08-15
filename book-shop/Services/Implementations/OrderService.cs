@@ -22,8 +22,10 @@ namespace book_shop.Services.Implementations
         private readonly UserHelper _userHelper;
         private readonly ILogger<OrderService> _logger;
         private readonly IPaymentRepository _paymentRepository;
+        private readonly IHttpClientFactory _httpFactory;
+        private readonly IConfiguration _config;
 
-        public OrderService(ILogger<OrderService> logger, IOrderRepository orderRepository, IOrderDetailRepository orderDetailRepository, IBookRepository book, UserHelper userHelper, ICartRepository cartRepository, ICartDetailRepository cartDetailRepository, IUserRepository userRepository, IAddressRepository addressRepository, IBookDetailRepository bookDetailRepository, IAuthorRepository authorRepository, IPaymentRepository paymentRepository)
+        public OrderService(ILogger<OrderService> logger, IOrderRepository orderRepository, IOrderDetailRepository orderDetailRepository, IBookRepository book, UserHelper userHelper, ICartRepository cartRepository, ICartDetailRepository cartDetailRepository, IUserRepository userRepository, IAddressRepository addressRepository, IBookDetailRepository bookDetailRepository, IAuthorRepository authorRepository, IPaymentRepository paymentRepository, IConfiguration config, IHttpClientFactory httpFactory)
         {
             _logger = logger;
             _orderRepository = orderRepository;
@@ -37,6 +39,8 @@ namespace book_shop.Services.Implementations
             _bookDetailRepository = bookDetailRepository;
             _authorRepository = authorRepository;
             _paymentRepository = paymentRepository;
+            _config = config;
+            _httpFactory = httpFactory;
         }
 
         public async Task<object> CancleOrderAsync(int id)
@@ -108,6 +112,8 @@ namespace book_shop.Services.Implementations
                         message = "Bạn cần đăng nhập để tạo đơn hàng."
                     };
                 }
+
+                var userInfor = await _userRepository.GetByIdAsync(userId);
 
                 if (order.items == null || !order.items.Any())
                 {
@@ -181,6 +187,20 @@ namespace book_shop.Services.Implementations
                 await _orderRepository.UpdateAsync(newOrder);
 
                 _logger.LogInformation("Đơn hàng đã được tạo thành công với ID: {OrderId}", newOrder.order_id);
+
+                var client = _httpFactory.CreateClient();
+                var url = _config["HangfireService:BaseUrl"].TrimEnd('/') + "/api/v1/jobs/send-admin-notification";
+
+                var payload = new
+                {
+                    order_id = newOrder.order_id, 
+                    message_content = $"Đơn hàng #{newOrder.order_id} từ {userInfor.first_name} {userInfor.last_name}",
+                    receiver_user_id = 3
+                };
+
+                var resp = await client.PostAsJsonAsync(url, payload);
+                resp.EnsureSuccessStatusCode();
+
                 return new
                 {
                     status = HttpStatusCode.Created,
@@ -213,6 +233,8 @@ namespace book_shop.Services.Implementations
                         message = "Bạn cần đăng nhập để tạo đơn hàng."
                     };
                 }
+
+                var userInfor = await _userRepository.GetByIdAsync(userId);
 
                 var cart = await _cartRepository.GetCartByUserIdAsync(userId);
                 if (cart == null || cart.items == null || !cart.items.Any())
@@ -298,6 +320,19 @@ namespace book_shop.Services.Implementations
 
                 _logger.LogInformation("Giỏ hàng đã được xóa sau khi tạo đơn hàng với ID: {OrderId}", newOrder.order_id);
 
+                var client = _httpFactory.CreateClient();
+                var url = _config["HangfireService:BaseUrl"].TrimEnd('/') + "/api/v1/jobs/send-admin-notification";
+
+                var payload = new
+                {
+                    order_id = newOrder.order_id,
+                    message_content = $"Đơn hàng #{newOrder.order_id} từ {userInfor.first_name} {userInfor.last_name}",
+                    receiver_user_id = 3
+                };
+
+                var resp = await client.PostAsJsonAsync(url, payload);
+                resp.EnsureSuccessStatusCode();
+
                 return new
                 {
                     status = HttpStatusCode.Created,
@@ -361,6 +396,7 @@ namespace book_shop.Services.Implementations
         public async Task<object> GetAllOrdersAsync()
         {
             var orders = await _orderRepository.GetAllAsync();
+            orders = orders.OrderByDescending(o => o.order_date).ToList();
             var orderResult = new List<OrderRespone>();
 
             foreach (var order in orders)

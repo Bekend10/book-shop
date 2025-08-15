@@ -8,6 +8,33 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Commands\**" />
+    <Compile Remove="Constants\**" />
+    <Compile Remove="Extensions\**" />
+    <Compile Remove="Queries\**" />
+    <Compile Remove="UnitOfWork\**" />
+    <Compile Remove="Validations\**" />
+    <Content Remove="Commands\**" />
+    <Content Remove="Constants\**" />
+    <Content Remove="Extensions\**" />
+    <Content Remove="Queries\**" />
+    <Content Remove="UnitOfWork\**" />
+    <Content Remove="Validations\**" />
+    <EmbeddedResource Remove="Commands\**" />
+    <EmbeddedResource Remove="Constants\**" />
+    <EmbeddedResource Remove="Extensions\**" />
+    <EmbeddedResource Remove="Queries\**" />
+    <EmbeddedResource Remove="UnitOfWork\**" />
+    <EmbeddedResource Remove="Validations\**" />
+    <None Remove="Commands\**" />
+    <None Remove="Constants\**" />
+    <None Remove="Extensions\**" />
+    <None Remove="Queries\**" />
+    <None Remove="UnitOfWork\**" />
+    <None Remove="Validations\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="EPPlus" Version="8.0.6" />
     <PackageReference Include="Google.Apis.Auth" Version="1.70.0" />
@@ -30,15 +57,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Commands\" />
     <Folder Include="EmailTemplates\Shared\" />
     <Folder Include="EmailTemplates\Orders\" />
-    <Folder Include="Extensions\" />
-    <Folder Include="Constants\" />
     <Folder Include="Resources\Excel\" />
-    <Folder Include="Validations\" />
-    <Folder Include="Queries\" />
-    <Folder Include="UnitOfWork\" />
   </ItemGroup>
 
   <ItemGroup>

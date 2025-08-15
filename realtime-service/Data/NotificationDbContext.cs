@@ -11,6 +11,7 @@ namespace realtime_service.Data
         }
 
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
