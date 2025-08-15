@@ -53,7 +53,9 @@ namespace book_shop.Services.Implementations
                         total_amount = book.price * dto.quantity,
                         created_at = DateTime.UtcNow,
                     };
-                    await _cartRepository.AddAsync(Newcart); // cart_id sẽ được EF gán
+                    await _cartRepository.AddAsync(Newcart);
+
+                    cart = await _cartRepository.GetCartByUserIdAsync(userId);
                 }
                 //Tạo hoặc cập nhật CartDetail
                 var cartDetail = await _cartDetailRepository.GetByCartIdAndBookIdAsync(cart.cart_id, dto.book_id);
@@ -94,6 +96,8 @@ namespace book_shop.Services.Implementations
 
                 await _cartDetailRepository.DeleteAsync(cart.cart_id);
                 await _cartRepository.DeleteAsync(cart.cart_id);
+
+                await _cacheService.RemoveAsync(CartCacheKeys.myCart(userId));
 
                 return new { status = HttpStatusCode.OK, msg = "Xóa giỏ hàng thành công !" };
             }
