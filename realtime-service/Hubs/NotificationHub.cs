@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using System;
+using System.Threading.Tasks;
 
 namespace realtime_service.Hubs
 {
@@ -6,16 +8,16 @@ namespace realtime_service.Hubs
     {
         public override async Task OnConnectedAsync()
         {
-            // Gắn UserId để gọi Clients.User(userId)
             var httpContext = Context.GetHttpContext();
             var userId = httpContext?.Request.Query["userId"];
-            if (!string.IsNullOrEmpty(userId))
+            var role = httpContext?.Request.Query["role"];
+
+            if (!string.IsNullOrEmpty(role) && role.ToString() == "admin")
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
-
-                await Clients.All.SendAsync("UserOnline", userId);
-
+                await Groups.AddToGroupAsync(Context.ConnectionId, "admin");
             }
+
+            await Clients.All.SendAsync("UserOnline", userId);
 
             await base.OnConnectedAsync();
         }
@@ -24,13 +26,7 @@ namespace realtime_service.Hubs
         {
             var httpContext = Context.GetHttpContext();
             var userId = httpContext?.Request.Query["userId"];
-            if (!string.IsNullOrEmpty(userId))
-            {
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user_{userId}");
-
-                await Clients.All.SendAsync("UserOffline", userId);
-            }
-
+            await Clients.All.SendAsync("UserOffline", userId);
             await base.OnDisconnectedAsync(exception);
         }
 
@@ -57,5 +53,21 @@ namespace realtime_service.Hubs
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"conversation_{conversationId}");
         }
+
+        public async Task SendNotificationToUser(string targetUserId, string message)
+        {
+            await Clients.Group($"user_{targetUserId}").SendAsync("ReceiveNotification", message);
+        }
+
+        public async Task SendNotificationToAll(string message)
+        {
+            await Clients.All.SendAsync("ReceiveNotification", message);
+        }
+
+        public async Task SendNotificationToAdmins(string message)
+        {
+            await Clients.Group("admin").SendAsync("ReceiveNotification", message);
+        }
+
     }
 }
