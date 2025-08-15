@@ -1,16 +1,18 @@
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using realtime_service.Consumers;
 using realtime_service.Data;
+using realtime_service.Helpers.AuthHelpers;
 using realtime_service.Hubs;
-using realtime_service.Repositories.Interfaces;
+using realtime_service.Mapper;
+using realtime_service.Providers;
 using realtime_service.Repositories;
+using realtime_service.Repositories.Implements;
+using realtime_service.Repositories.Interfaces;
+using realtime_service.Services.External;
 using realtime_service.Services.Implements;
 using realtime_service.Services.Interfaces;
 using Refit;
-using realtime_service.Services.External;
-using realtime_service.Helpers.AuthHelpers;
-using realtime_service.Repositories.Implements;
-using Microsoft.Extensions.DependencyInjection;
-using realtime_service.Mapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,11 +26,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddHostedService<NotificationConsumer>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ITokenProvider, TokenProvider>();
 builder.Services.AddScoped<AuthHeaderHandler>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddSingleton<IUserIdProvider, QueryStringUserIdProvider>();
 
 builder.Services.AddCors(options =>
 {
