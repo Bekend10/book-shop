@@ -16,9 +16,9 @@ namespace book_shop.Services.Implementations
         private readonly IAuthorRepository _authorRepository;
         private readonly ILogger<CartService> _logger;
         private readonly UserHelper _userHelper;
-        private readonly IRedisCacheService _cacheService;
+        //private readonly IRedisCacheService _cacheService;
 
-        public CartService(ICartRepository cartRepository, ILogger<CartService> logger, IBookRepository bookRepository, UserHelper userHelper, ICartDetailRepository cartDetailRepository, IAuthorRepository authorRepository, IRedisCacheService cacheService)
+        public CartService(ICartRepository cartRepository, ILogger<CartService> logger, IBookRepository bookRepository, UserHelper userHelper, ICartDetailRepository cartDetailRepository, IAuthorRepository authorRepository)
         {
             _cartRepository = cartRepository;
             _logger = logger;
@@ -26,7 +26,7 @@ namespace book_shop.Services.Implementations
             _userHelper = userHelper;
             _cartDetailRepository = cartDetailRepository;
             _authorRepository = authorRepository;
-            _cacheService = cacheService;
+            //_cacheService = cacheService;
         }
 
         public async Task<object> AddToCartAsync(AddToCartDto dto)
@@ -75,7 +75,7 @@ namespace book_shop.Services.Implementations
                     };
                     await _cartDetailRepository.AddAsync(cartDetail);
                 }
-                await _cacheService.RemoveAsync(CartCacheKeys.myCart(userId));
+                //await _cacheService.RemoveAsync(CartCacheKeys.myCart(userId));
 
                 return new { status = HttpStatusCode.OK, msg = "Thêm sách vào giỏ hàng thành công !" };
             }
@@ -97,7 +97,7 @@ namespace book_shop.Services.Implementations
                 await _cartDetailRepository.DeleteAsync(cart.cart_id);
                 await _cartRepository.DeleteAsync(cart.cart_id);
 
-                await _cacheService.RemoveAsync(CartCacheKeys.myCart(userId));
+                //await _cacheService.RemoveAsync(CartCacheKeys.myCart(userId));
 
                 return new { status = HttpStatusCode.OK, msg = "Xóa giỏ hàng thành công !" };
             }
@@ -122,16 +122,16 @@ namespace book_shop.Services.Implementations
                     };
                 }
 
-                var cached = await _cacheService.GetAsync<CartDto>(CartCacheKeys.myCart(userId));
-                if (cached != null)
-                {
-                    return new
-                    {
-                        status = HttpStatusCode.OK,
-                        msg = "Lấy chi tiết giỏ hàng thành công từ cache",
-                        data = cached
-                    };
-                }
+                //var cached = await _cacheService.GetAsync<CartDto>(CartCacheKeys.myCart(userId));
+                //if (cached != null)
+                //{
+                //    return new
+                //    {
+                //        status = HttpStatusCode.OK,
+                //        msg = "Lấy chi tiết giỏ hàng thành công từ cache",
+                //        data = cached
+                //    };
+                //}
 
                     var cart = await _cartRepository.GetCartByUserIdAsync(userId);
                 if (cart == null)
@@ -179,7 +179,7 @@ namespace book_shop.Services.Implementations
                 };
 
                 // Lưu vào cache
-                await _cacheService.SetAsync(CartCacheKeys.myCart(userId), cartDto, TimeSpan.FromDays(1));
+                //await _cacheService.SetAsync(CartCacheKeys.myCart(userId), cartDto, TimeSpan.FromDays(1));
 
                 return new
                 {
@@ -333,7 +333,7 @@ namespace book_shop.Services.Implementations
                     updated_at = cart.updated_at
                 };
                 await _cartRepository.UpdateAsync(newCart);
-                await _cacheService.RemoveAsync(CartCacheKeys.myCart(userId));
+                //await _cacheService.RemoveAsync(CartCacheKeys.myCart(userId));
                 return new { status = HttpStatusCode.OK, msg = "Cập nhật thành công" };
             }
             catch (Exception ex)

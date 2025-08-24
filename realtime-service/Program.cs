@@ -20,7 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSignalR();
 
 builder.Services.AddDbContext<NotificationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("PublishConnection")));
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -50,7 +50,7 @@ builder.Services.AddAutoMapper(typeof(MessageMapper));
 builder.Services.AddRefitClient<IUserService>()
     .ConfigureHttpClient(c =>
     {
-        c.BaseAddress = new Uri("https://localhost:7096/api/v1");
+        c.BaseAddress = new Uri("https://bookshop-api-fzcufhccfag3cgds.canadacentral-01.azurewebsites.net/api/v1");
     })
     .AddHttpMessageHandler<AuthHeaderHandler>();
 

@@ -20,18 +20,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Cấu hình license cho EPPlus (NonCommercial)
 ExcelPackage.License.SetNonCommercialPersonal("Nguyen Tien Dung");
 // Redis config
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-{
-    var configuration = builder.Configuration.GetValue<string>("Redis:ConnectionString");
-    return ConnectionMultiplexer.Connect(configuration);
-});
+//builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+//{
+//    var configuration = builder.Configuration.GetValue<string>("Redis:ConnectionString");
+//    return ConnectionMultiplexer.Connect(configuration);
+//});
 
 builder.Services.AddControllers();
 Console.OutputEncoding = Encoding.UTF8;
 
 // Database config
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("PublishConnection")));
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
@@ -73,11 +73,11 @@ builder.Services.AddScoped<IBookReviewRepository, BookReviewRepository>();
 builder.Services.AddScoped<IBookReviewService, BookReviewService>();
 builder.Services.AddScoped<IRevenueService, RevenueService>();
 builder.Services.AddScoped<IReportService, ReportService>();
-builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
+//builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
 
 builder.Services.AddHttpClient("CloudinaryService", client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7080");
+    client.BaseAddress = new Uri("https://cloudinary-service-gneugea0haehcwdd.southeastasia-01.azurewebsites.net");
 });
 builder.Services.AddScoped<ICloudService, CloudService>();
 
@@ -90,10 +90,10 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
-
+builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient("VnpayServiceClient", client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7289");
+    client.BaseAddress = new Uri("https://payment-api-a0dzecg5dabrfchs.canadacentral-01.azurewebsites.net/");
 });
 builder.Services.AddScoped<IVnpayService, VnpayService>();
 

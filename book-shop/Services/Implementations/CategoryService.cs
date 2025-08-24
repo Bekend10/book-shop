@@ -14,14 +14,14 @@ namespace book_shop.Services.Implementations
         private readonly IBookRepository _bookRepository;
         private readonly ILogger<CategoryService> _logger;
         private readonly UserHelper _userHelper;
-        private readonly IRedisCacheService _redisCacheService;
-        public CategoryService(ICategoryRepository categoryRepository, ILogger<CategoryService> logger, UserHelper userHelper, IBookRepository bookRepository, IRedisCacheService redisCacheService)
+        //private readonly IRedisCacheService _redisCacheService;
+        public CategoryService(ICategoryRepository categoryRepository, ILogger<CategoryService> logger, UserHelper userHelper, IBookRepository bookRepository)
         {
             _categoryRepository = categoryRepository;
             _logger = logger;
             _userHelper = userHelper;
             _bookRepository = bookRepository;
-            _redisCacheService = redisCacheService;
+            //_redisCacheService = redisCacheService;
         }
         public async Task<object> AddCategoryAsync(CategoryDto category)
         {
@@ -50,7 +50,7 @@ namespace book_shop.Services.Implementations
                 };
                 await _categoryRepository.AddAsync(newCategory);
 
-                await _redisCacheService.RemoveAsync(CategoryCacheKeys.GetAllCategories);
+                //await _redisCacheService.RemoveAsync(CategoryCacheKeys.GetAllCategories);
 
                 _logger.LogInformation("Thêm danh mục {category} thành công !", category.name);
                 return new { status = HttpStatusCode.Created, message = "Thêm danh mục thành công !" };
@@ -70,19 +70,19 @@ namespace book_shop.Services.Implementations
             }
             await _categoryRepository.DeleteAsync(id);
 
-            await _redisCacheService.RemoveAsync(CategoryCacheKeys.GetAllCategories);
+            //await _redisCacheService.RemoveAsync(CategoryCacheKeys.GetAllCategories);
 
             return new { status = HttpStatusCode.OK, msg = "Xóa danh mục thành công !" };
         }
 
         public async Task<object> GetAllCategoriesAsync()
         {
-            var cached = await _redisCacheService.GetAsync<List<CategoryDto>>(CategoryCacheKeys.GetAllCategories);
-            if (cached != null)
-            {
-                _logger.LogInformation("Lấy danh sách danh mục từ cache thành công !");
-                return new { status = HttpStatusCode.OK, msg = "Lấy danh sách danh mục thành công !", data = cached };
-            }
+            //var cached = await _redisCacheService.GetAsync<List<CategoryDto>>(CategoryCacheKeys.GetAllCategories);
+            //if (cached != null)
+            //{
+            //    _logger.LogInformation("Lấy danh sách danh mục từ cache thành công !");
+            //    return new { status = HttpStatusCode.OK, msg = "Lấy danh sách danh mục thành công !", data = cached };
+            //}
             var result = await _categoryRepository.GetAllAsync();
             if (result == null)
             {
@@ -104,7 +104,7 @@ namespace book_shop.Services.Implementations
                 item.book_count = bookList.Count();
             }
 
-            await _redisCacheService.SetAsync(CategoryCacheKeys.GetAllCategories, categoryRespone, TimeSpan.FromMinutes(30));
+            //await _redisCacheService.SetAsync(CategoryCacheKeys.GetAllCategories, categoryRespone, TimeSpan.FromMinutes(30));
 
             _logger.LogInformation("Lấy danh sách danh mục thành công !");
             return new {status = HttpStatusCode.OK, msg = "Lấy danh sách danh mục thành công !" ,data = categoryRespone };
@@ -136,7 +136,7 @@ namespace book_shop.Services.Implementations
             cate.description = category.description;
             await _categoryRepository.UpdateAsync(cate);
             _logger.LogInformation("Cập nhật danh mục {category} thành công !", category.name);
-            await _redisCacheService.RemoveAsync(CategoryCacheKeys.GetAllCategories);   
+            //await _redisCacheService.RemoveAsync(CategoryCacheKeys.GetAllCategories);   
             return new { status = HttpStatusCode.OK, msg = "Cập nhật danh mục thành công !" };
         }
     }

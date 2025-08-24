@@ -5,6 +5,7 @@ using book_shop.Repositories.Interfaces;
 using book_shop.Services.Interfaces;
 using Google.Apis.Auth;
 using Microsoft.Extensions.Configuration;
+using Org.BouncyCastle.Utilities.Net;
 using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -138,7 +139,27 @@ namespace book_shop.Services.Implementations
                 await _accountRepository.UpdateAsync(account);
 
                 var user = await _userRepository.GetByIdAsync(account.user_id);
+                if (user == null)
+                {
+                    _logger.LogWarning("Không tìm thấy người dùng cho tài khoản email: {Email}", loginDto.email);
+                    return new
+                    {
+                        status = HttpStatusCode.NotFound,
+                        msg = "Không tìm thấy người dùng !"
+                    };
+                }
+
                 var address = await _addressRepository.GetByIdAsync(user.address_id);
+                var addressDto = address == null ? null : new Address
+                {
+                    address_id = address.address_id,
+                    commune = address.commune,
+                    councious = address.councious,
+                    district = address.district,
+                    country = address.country,
+                    house_number = address.house_number
+                };
+
                 return new
                 {
                     status = HttpStatusCode.OK,
@@ -155,10 +176,11 @@ namespace book_shop.Services.Implementations
                         full_name = user.first_name + " " + user.last_name,
                         profile_image = user.profile_image,
                         phone_number = user.phone_number,
-                        address = address,
+                        address = addressDto,
                         role = account.role_id == 1 ? "user" : "admin",
                     }
                 };
+
             }
             catch (Exception ex)
             {
