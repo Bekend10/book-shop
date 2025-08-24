@@ -18,10 +18,10 @@ namespace book_shop.Services.Implementations
         private readonly IBookDetailRepository _bookDetailRepository;
         private readonly ILogger<BookService> _logger;
         private readonly ICloudService _cloudService;
-        private readonly IRedisCacheService _cache;
+        //private readonly IRedisCacheService _cache;
         private readonly IWebHostEnvironment _env;
 
-        public BookService(IBookRepository bookService, ILogger<BookService> logger, ICloudService cloudService, IBookDetailRepository bookDetailRepository, IAuthorRepository authorRepository, ICategoryRepository categoryRepository, IRedisCacheService cache, IWebHostEnvironment env)
+        public BookService(IBookRepository bookService, ILogger<BookService> logger, ICloudService cloudService, IBookDetailRepository bookDetailRepository, IAuthorRepository authorRepository, ICategoryRepository categoryRepository, IWebHostEnvironment env)
         {
             _bookRepository = bookService;
             _logger = logger;
@@ -29,7 +29,7 @@ namespace book_shop.Services.Implementations
             _bookDetailRepository = bookDetailRepository;
             _authorRepository = authorRepository;
             _categoryRepository = categoryRepository;
-            _cache = cache;
+            //_cache = cache;
             _env = env;
         }
 
@@ -89,10 +89,10 @@ namespace book_shop.Services.Implementations
                 };
 
                 await _bookDetailRepository.AddAsync(bookDetail);
-                await _cache.RemoveAsync(BookCacheKeys._bookList);
-                await _cache.RemoveAsync(BookCacheKeys.BookByCategory(book.category_id));
-                await _cache.RemoveAsync(BookCacheKeys.BookByAuthor(book.author_id));
-                await _cache.RemoveAsync(BookCacheKeys.BookById(newBook.book_id));
+                //await _cache.RemoveAsync(BookCacheKeys._bookList);
+                //await _cache.RemoveAsync(BookCacheKeys.BookByCategory(book.category_id));
+                //await _cache.RemoveAsync(BookCacheKeys.BookByAuthor(book.author_id));
+                //await _cache.RemoveAsync(BookCacheKeys.BookById(newBook.book_id));
 
                 _logger.LogInformation("Thêm sách {title} thành công !", book.title);
 
@@ -125,10 +125,10 @@ namespace book_shop.Services.Implementations
                 await _bookDetailRepository.DeleteAsync(detail.detail_id);
                 _logger.LogInformation("Xoá sách {id} thành công !", id);
 
-                await _cache.RemoveAsync(BookCacheKeys._bookList);
-                await _cache.RemoveAsync(BookCacheKeys.BookByCategory(isExist.category_id));
-                await _cache.RemoveAsync(BookCacheKeys.BookById(id));
-                await _cache.RemoveAsync(BookCacheKeys.BookByAuthor(isExist.author_id));
+                //await _cache.RemoveAsync(BookCacheKeys._bookList);
+                //await _cache.RemoveAsync(BookCacheKeys.BookByCategory(isExist.category_id));
+                //await _cache.RemoveAsync(BookCacheKeys.BookById(id));
+                //await _cache.RemoveAsync(BookCacheKeys.BookByAuthor(isExist.author_id));
 
                 return new { status = HttpStatusCode.OK, msg = "Xoá sách thành công !" };
             }
@@ -149,17 +149,17 @@ namespace book_shop.Services.Implementations
             {
                 _logger.LogInformation("Lấy danh sách sách thành công !");
 
-                var cached = await _cache.GetAsync<IEnumerable<BookResponseDto>>(BookCacheKeys._bookList);
-                if (cached != null)
-                {
-                    _logger.LogInformation("Lấy sách từ cache thành công !");
-                    return new
-                    {
-                        status = HttpStatusCode.OK,
-                        msg = "Lấy danh sách sách thành công !",
-                        data = cached,
-                    };
-                }
+                //var cached = await _cache.GetAsync<IEnumerable<BookResponseDto>>(BookCacheKeys._bookList);
+                //if (cached != null)
+                //{
+                //    _logger.LogInformation("Lấy sách từ cache thành công !");
+                //    return new
+                //    {
+                //        status = HttpStatusCode.OK,
+                //        msg = "Lấy danh sách sách thành công !",
+                //        data = cached,
+                //    };
+                //}
 
                 var books = await _bookRepository.GetAllAsync();
 
@@ -206,7 +206,7 @@ namespace book_shop.Services.Implementations
                     bookDtos.Add(dto);
                 }
 
-                await _cache.SetAsync(BookCacheKeys._bookList, bookDtos, TimeSpan.FromMinutes(30));
+                //await _cache.SetAsync(BookCacheKeys._bookList, bookDtos, TimeSpan.FromMinutes(30));
 
                 return new
                 {
@@ -238,17 +238,17 @@ namespace book_shop.Services.Implementations
                     return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy sách !" };
                 }
 
-                var cached = await _cache.GetAsync<BookResponseDto>(BookCacheKeys.BookById(id));
-                if (cached != null)
-                {
-                    _logger.LogInformation("Lấy sách từ cache thành công !");
-                    return new
-                    {
-                        status = HttpStatusCode.OK,
-                        msg = "Lấy sách thành công !",
-                        data = cached,
-                    };
-                }
+                //var cached = await _cache.GetAsync<BookResponseDto>(BookCacheKeys.BookById(id));
+                //if (cached != null)
+                //{
+                //    _logger.LogInformation("Lấy sách từ cache thành công !");
+                //    return new
+                //    {
+                //        status = HttpStatusCode.OK,
+                //        msg = "Lấy sách thành công !",
+                //        data = cached,
+                //    };
+                //}
 
                 var bookDetail = await _bookDetailRepository.GetBookDetailsByBookIdAsync(id);
                 var author = await _authorRepository.GetByIdAsync(book.author_id);
@@ -290,7 +290,7 @@ namespace book_shop.Services.Implementations
                 };
 
                 _logger.LogInformation("Lấy sách {id} thành công !", id);
-                await _cache.SetAsync(BookCacheKeys.BookById(id), bookDto, TimeSpan.FromMinutes(30));
+                //await _cache.SetAsync(BookCacheKeys.BookById(id), bookDto, TimeSpan.FromMinutes(30));
                 return new
                 {
                     status = HttpStatusCode.OK,
@@ -320,17 +320,17 @@ namespace book_shop.Services.Implementations
                     return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy tác giả !" };
                 }
 
-                var cached = await _cache.GetAsync<BookResponseDto>(BookCacheKeys.BookByAuthor(authorId));
-                if (cached != null)
-                {
-                    _logger.LogInformation("Lấy sách theo tác giả từ cache thành công !");
-                    return new
-                    {
-                        status = HttpStatusCode.OK,
-                        msg = "Lấy danh sách sách theo tác giả thành công !",
-                        data = cached,
-                    };
-                }
+                //var cached = await _cache.GetAsync<BookResponseDto>(BookCacheKeys.BookByAuthor(authorId));
+                //if (cached != null)
+                //{
+                //    _logger.LogInformation("Lấy sách theo tác giả từ cache thành công !");
+                //    return new
+                //    {
+                //        status = HttpStatusCode.OK,
+                //        msg = "Lấy danh sách sách theo tác giả thành công !",
+                //        data = cached,
+                //    };
+                //}
 
                 var book = await _bookRepository.GetBooksByAuthorIdAsync(authorId);
                 if (book == null)
@@ -374,7 +374,7 @@ namespace book_shop.Services.Implementations
                 }));
 
                 _logger.LogInformation("Lấy sách theo tác giả {authorId} thành công !", authorId);
-                await _cache.SetAsync(BookCacheKeys.BookByAuthor(authorId), bookDtos, TimeSpan.FromMinutes(30));
+                //await _cache.SetAsync(BookCacheKeys.BookByAuthor(authorId), bookDtos, TimeSpan.FromMinutes(30));
                 return new
                 {
                     status = HttpStatusCode.OK,
@@ -404,17 +404,17 @@ namespace book_shop.Services.Implementations
                     return new { status = HttpStatusCode.NotFound, msg = "Không tìm thấy thể loại !" };
                 }
 
-                var cached = _cache.GetAsync<IEnumerable<BookResponseDto>>(BookCacheKeys.BookByCategory(categoryId));
-                if (cached != null)
-                {
-                    _logger.LogInformation("Lấy sách theo thể loại từ cache thành công !");
-                    return new
-                    {
-                        status = HttpStatusCode.OK,
-                        msg = "Lấy danh sách sách theo thể loại thành công !",
-                        data = cached,
-                    };
-                }
+                //var cached = _cache.GetAsync<IEnumerable<BookResponseDto>>(BookCacheKeys.BookByCategory(categoryId));
+                //if (cached != null)
+                //{
+                //    _logger.LogInformation("Lấy sách theo thể loại từ cache thành công !");
+                //    return new
+                //    {
+                //        status = HttpStatusCode.OK,
+                //        msg = "Lấy danh sách sách theo thể loại thành công !",
+                //        data = cached,
+                //    };
+                //}
 
                 var books = await _bookRepository.GetBooksByCategoryIdAsync(categoryId);
                 if (books == null || !books.Any())
@@ -458,7 +458,7 @@ namespace book_shop.Services.Implementations
                     };
                 }));
 
-                await _cache.SetAsync(BookCacheKeys.BookByCategory(categoryId), bookDtos, TimeSpan.FromMinutes(30));
+                //await _cache.SetAsync(BookCacheKeys.BookByCategory(categoryId), bookDtos, TimeSpan.FromMinutes(30));
 
                 return new
                 {
@@ -711,7 +711,7 @@ namespace book_shop.Services.Implementations
                 }
             }
 
-            await _cache.RemoveAsync(BookCacheKeys._bookList);
+            //await _cache.RemoveAsync(BookCacheKeys._bookList);
 
             // Nếu repository có trả kết quả thì có thể dùng để xác nhận successCount
             await _bookRepository.ImportBookByExcel(books);
@@ -790,10 +790,10 @@ namespace book_shop.Services.Implementations
                 await _bookRepository.UpdateAsync(existingBook);
                 await _bookDetailRepository.UpdateAsync(existingBookDetail);
 
-                await _cache.RemoveAsync(BookCacheKeys._bookList);
-                await _cache.RemoveAsync(BookCacheKeys.BookByCategory(existingBook.category_id));
-                await _cache.RemoveAsync(BookCacheKeys.BookById(id));
-                await _cache.RemoveAsync(BookCacheKeys.BookByAuthor(existingBook.author_id));
+                //await _cache.RemoveAsync(BookCacheKeys._bookList);
+                //await _cache.RemoveAsync(BookCacheKeys.BookByCategory(existingBook.category_id));
+                //await _cache.RemoveAsync(BookCacheKeys.BookById(id));
+                //await _cache.RemoveAsync(BookCacheKeys.BookByAuthor(existingBook.author_id));
 
                 _logger.LogInformation("Cập nhật sách {id} thành công !", id);
                 return new { status = HttpStatusCode.OK, msg = "Cập nhật sách thành công !" };

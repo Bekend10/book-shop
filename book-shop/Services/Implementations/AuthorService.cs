@@ -12,13 +12,13 @@ namespace book_shop.Services.Implementations
         private readonly IAuthorRepository _authorRepository;
         private readonly ILogger<AuthorService> _logger;
         private readonly ICloudService _cloudService;
-        private readonly IRedisCacheService _cache;
-        public AuthorService(IAuthorRepository authorRepository, ILogger<AuthorService> logger, ICloudService cloudService, IRedisCacheService cache)
+        //private readonly IRedisCacheService _cache;
+        public AuthorService(IAuthorRepository authorRepository, ILogger<AuthorService> logger, ICloudService cloudService)
         {
             _authorRepository = authorRepository;
             _logger = logger;
             _cloudService = cloudService;
-            _cache = cache;
+            //_cache = cache;
         }
 
         public async Task<object> GetAuthorByNationally(string nationally)
@@ -57,17 +57,17 @@ namespace book_shop.Services.Implementations
         {
             try
             {
-                var cached = await _cache.GetAsync<Author>(AuthorCacheKeys.AuthorById(id));
-                if (cached != null)
-                {
-                    _logger.LogInformation("Lấy thông tin tác giả từ cache thành công");
-                    return new
-                    {
-                        status = HttpStatusCode.OK,
-                        message = "Lấy thông tin tác giả từ cache thành công",
-                        data = cached
-                    };
-                }
+                //var cached = await _cache.GetAsync<Author>(AuthorCacheKeys.AuthorById(id));
+                //if (cached != null)
+                //{
+                //    _logger.LogInformation("Lấy thông tin tác giả từ cache thành công");
+                //    return new
+                //    {
+                //        status = HttpStatusCode.OK,
+                //        message = "Lấy thông tin tác giả từ cache thành công",
+                //        data = cached
+                //    };
+                //}
 
                 var author = await _authorRepository.GetByIdAsync(id);
                 if (author == null)
@@ -80,7 +80,7 @@ namespace book_shop.Services.Implementations
                 }
                 _logger.LogInformation("Lấy thông tin tác giả theo id thành công");
 
-                await _cache.SetAsync(AuthorCacheKeys._authorList, author, TimeSpan.FromMinutes(30));
+                //await _cache.SetAsync(AuthorCacheKeys._authorList, author, TimeSpan.FromMinutes(30));
                 return new
                 {
                     status = HttpStatusCode.OK,
@@ -132,8 +132,8 @@ namespace book_shop.Services.Implementations
                 }
                 _logger.LogInformation("Thêm tác giả {author} thành công", author.name);
 
-                await _cache.RemoveAsync(AuthorCacheKeys._authorList);
-                await _cache.RemoveAsync(AuthorCacheKeys.AuthorById(author.author_id));
+                //await _cache.RemoveAsync(AuthorCacheKeys._authorList);
+                //await _cache.RemoveAsync(AuthorCacheKeys.AuthorById(author.author_id));
 
                 return new
                 {
@@ -189,7 +189,7 @@ namespace book_shop.Services.Implementations
                 await _authorRepository.UpdateAsync(isExistingAuthor);
                 _logger.LogInformation("Cập nhật tác giả {author} thành công", author.name);
 
-                await _cache.RemoveAsync(AuthorCacheKeys._authorList);
+                //await _cache.RemoveAsync(AuthorCacheKeys._authorList);
 
                 return new
                 {
@@ -225,7 +225,7 @@ namespace book_shop.Services.Implementations
                 await _authorRepository.DeleteAsync(id);
                 _logger.LogInformation("Xóa tác giả {id} thành công", id);
 
-                await _cache.RemoveAsync(AuthorCacheKeys._authorList);
+                //await _cache.RemoveAsync(AuthorCacheKeys._authorList);
 
                 return new
                 {

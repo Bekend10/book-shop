@@ -194,7 +194,7 @@ namespace book_shop.Services.Implementations
                 var payload = new
                 {
                     order_id = newOrder.order_id, 
-                    message_content = $"Đơn hàng #{newOrder.order_id} từ {userInfor.first_name} {userInfor.last_name}",
+                    message_content = $"Đơn hàng #{newOrder.order_id} vừa được tạo bởi {userInfor.first_name} {userInfor.last_name} lúc {newOrder.order_date.ToString("dd/MM/yyyy")}",
                     receiver_user_id = 3
                 };
 
@@ -326,7 +326,7 @@ namespace book_shop.Services.Implementations
                 var payload = new
                 {
                     order_id = newOrder.order_id,
-                    message_content = $"Đơn hàng #{newOrder.order_id} từ {userInfor.first_name} {userInfor.last_name}",
+                    message_content = $"Đơn hàng #{newOrder.order_id} vừa được tạo bởi {userInfor.first_name} {userInfor.last_name} lúc {newOrder.order_date.ToString("dd/MM/yyyy")}",
                     receiver_user_id = 3
                 };
 

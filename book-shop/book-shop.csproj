@@ -7,7 +7,7 @@
     <RootNamespace>book_shop</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
+  <!-- <ItemGroup>
     <Compile Remove="Commands\**" />
     <Compile Remove="Constants\**" />
     <Compile Remove="Extensions\**" />
@@ -32,7 +32,7 @@
     <None Remove="Queries\**" />
     <None Remove="UnitOfWork\**" />
     <None Remove="Validations\**" />
-  </ItemGroup>
+  </ItemGroup> -->
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
@@ -51,6 +51,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.8" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.58" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
@@ -60,6 +61,12 @@
     <Folder Include="EmailTemplates\Shared\" />
     <Folder Include="EmailTemplates\Orders\" />
     <Folder Include="Resources\Excel\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="EmailTemplates\**\*.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

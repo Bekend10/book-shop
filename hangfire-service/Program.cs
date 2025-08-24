@@ -8,7 +8,7 @@ using hangfire_service.Services.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHangfire(config =>
-    config.UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection")));
+    config.UseSqlServerStorage(builder.Configuration.GetConnectionString("PublishConnection")));
 // Add services to the container.
 
 builder.Services.AddControllers();
